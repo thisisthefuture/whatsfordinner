@@ -1,0 +1,19 @@
+{
+  "name": "whatsfordinner",
+  "version": "1.0.0",
+  "description": "Full Name - the Sage & Alice What's for Dinner App. This app will remind us of what places we love to have dinner at.",
+  "main": "SwarmHistory.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thisisthefuture/whatsfordinner.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/thisisthefuture/whatsfordinner/issues"
+  },
+  "homepage": "https://github.com/thisisthefuture/whatsfordinner#readme"
+}
