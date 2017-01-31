@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/thisisthefuture/whatsfordinner/issues"
   },
-  "homepage": "https://github.com/thisisthefuture/whatsfordinner#readme"
+  "homepage": "https://github.com/thisisthefuture/whatsfordinner#readme",
+  "dependencies": {
+    "express": "^4.14.0"
+  }
 }

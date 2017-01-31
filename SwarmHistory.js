@@ -1,4 +1,10 @@
-var text = [ { "meta": { "code": 200, "requestId": "5887e551dd57974d22a8429c" }, "notifications": [ { "item": { "unreadCount": 0 }, "type": "notificationTray" } ], "response": { "checkins": { "count": 1511, "items": [ { "comments": { "count": 0 }, "createdAt": 1485114975, "id": "58850e5fac136931b3b66dac", "isMayor": false, "like": false, "likes": { "count": 0, "groups": [] }, "photos": { "count": 0, "items": [] }, "posts": { "count": 0, "textCount": 0 }, "source": { "name": "Swarm for iOS", "url": "https://www.swarmapp.com" }, "timeZoneOffset": -480, "type": "checkin", "venue": { "allowMenuUrlEdit": true, "beenHere": { "lastCheckinExpiredAt": 0 }, "categories": [ { "icon": { "prefix": "https://ss3.4sqi.net/img/categories_v2/food/vietnamese_", "suffix": ".png" }, "id": "4bf58dd8d48988d14a941735", "name": "Vietnamese Restaurant", "pluralName": "Vietnamese Restaurants", "primary": true, "shortName": "Vietnamese" } ], "contact": { "formattedPhone": "(206) 325-2111", "phone": "2063252111", "twitter": "monsoonnw" }, "hasMenu": true, "id": "4391a4d9f964a5205e2b1fe3", "location": { "address": "615 19th Ave E", "cc": "US", "city": "Seattle", "country": "United States", "crossStreet": "at E Mercer St", "formattedAddress": [ "615 19th Ave E (at E Mercer St)", "Seattle, WA 98112" ], "labeledLatLngs": [ { "label": "display", "lat": 47.62479716487741, "lng": -122.30756968259811 } ], "lat": 47.62479716487741, "lng": -122.30756968259811, "postalCode": "98112", "state": "WA" }, "menu": { "anchor": "View Menu", "label": "Menu", "mobileUrl": "https://foursquare.com/v/4391a4d9f964a5205e2b1fe3/device_menu", "type": "Menu", "url": "https://foursquare.com/v/monsoon/4391a4d9f964a5205e2b1fe3/menu" }, "name": "Monsoon", "stats": { "checkinsCount": 2798, "tipCount": 48, "usersCount": 1470 }, "url": "http://www.monsoonseattle.com", "verified": false } }, { "comments": { "count": 0 }, "createdAt": 1485063103, "id": "588443bf2bc5e272f3f8ab3a", "isMayor": false, "like": false, "likes": { "count": 0, "groups": [] }, "photos": { "count": 0, "items": [] }, "posts": { "count": 0, "textCount": 0 }, "source": { "name": "Swarm for iOS", "url": "https://www.swarmapp.com" }, "timeZoneOffset": -480, "type": "checkin", "venue": { "allowMenuUrlEdit": true, "beenHere": { "lastCheckinExpiredAt": 0 }, "categories": [ { "icon": { "prefix": "https://ss3.4sqi.net/img/categories_v2/nightlife/pub_", "suffix": ".png" }, "id": "4bf58dd8d48988d116941735", "name": "Bar", "pluralName": "Bars", "primary": true, "shortName": "Bar" } ], "contact": { "formattedPhone": "(206) 245-1390", "phone": "2062451390" }, "hasMenu": true, "id": "4f3dffcae4b02787b3ae4674", "location": { "address": "719 E Pike St", "cc": "US", "city": "Seattle", "country": "United States", "crossStreet": "at Harvard Ave.", "formattedAddress": [ "719 E Pike St (at Harvard Ave.)", "Seattle, WA 98122" ], "labeledLatLngs": [ { "label": "display", "lat": 47.61405165530944, "lng": -122.32260390442656 } ], "lat": 47.61405165530944, "lng": -122.32260390442656, "postalCode": "98122", "state": "WA" }, "menu": { "anchor": "View Menu", "label": "Menu", "mobileUrl": "https://foursquare.com/v/4f3dffcae4b02787b3ae4674/device_menu", "type": "Menu", "url": "https://foursquare.com/v/saint-johns-bar--eatery/4f3dffcae4b02787b3ae4674/menu" }, "name": "Saint John's Bar & Eatery", "stats": { "checkinsCount": 3473, "tipCount": 23, "usersCount": 1614 }, "url": "http://saintjohnsseattle.com", "verified": false } } ] } } } ];
+var fs = require('fs');
+var text;
+
+var express = require('express');
+var app = express();
+var port = process.env.PORT || 8000;
+var server = require('http').Server(app);
 
 var categories = {                              // list of valid food/drinks related categories
   "Food": "4d4b7105d754a06374d81259",
@@ -356,21 +362,71 @@ var categories = {                              // list of valid food/drinks rel
   "Speakeasy": "4bf58dd8d48988d1d4941735"
 };
 
-var checkins = text[0].response.checkins.items;     // give me only the array of checkin items
 
-var placesToEat = [];
+server.listen(port, function() {
+    console.log("App is running on port " + port);
+});
 
-for (var i = 0; i < checkins.length; i++) {
-  if (function(category) {
-    return categories.hasOwnProperty(category);
-  }) {
-    placesToEat.push(checkins[i]);
-  }
-}
+app.get('/', function (req, res) {
+  // res.send('Hello World!');
+  var summary = '';
+  fs.readFile('data/foursquare_checkins.json', 'utf8', function (err, data) {
+    if (err) throw err;
+    text = JSON.parse(data);
+    var places = [];
+    // for (var i = 0 ; i < text.length; i++) {
+      // places += text[i].response.checkins.items;
+      // places.push(text[0].response.checkins.items);
+      // places = text[0].response.checkins.items;
+    // }
+
+    for (var i = 0 ; i < text.length; i++) {
+      places = places.concat(text[i].response.checkins.items);
+      // console.log(i, places.length);
+    }
+//    places = text[0].response.checkins.items;
+
+    // var places = text[0].response.checkins.items;     // give me only the array of checkin items
+    // console.log(places[0].venue.categories[0].name);
+
+    var placesToEat = [];
+    console.log('# of places', places.length);
+    console.log('# of places to eat', placesToEat.length);
+
+    for (var i = 0; i < places.length; i++) {
+      // console.log('i', i, places[i].venue.name);
+
+      if (places[i].hasOwnProperty('venue')) {
+        if (function(category) {
+            // summary += ('checking '+ category.name + '<br />');
+            // console.log('checking...', category)
+            return categories.hasOwnProperty(category.name);
+          }(places[i].venue.categories[0] || 'none')) {
+            placesToEat.push(places[i]);
+            summary += ('place ' + i + ': ' + places[i].venue.name + ' is a place to eat!<br />');
+            // console.log(checkins[i].venue.name, ' is a place to eat!');
+        }
+      }
+
+    }
+    res.send(summary);
+
+
+    // console.log(text);
+    // res.send('hi');
+  });
+})
+
+// var text = [ { "meta": { "code": 200, "requestId": "5887e551dd57974d22a8429c" }, "notifications": [ { "item": { "unreadCount": 0 }, "type": "notificationTray" } ], "response": { "checkins": { "count": 1511, "items": [ { "comments": { "count": 0 }, "createdAt": 1485114975, "id": "58850e5fac136931b3b66dac", "isMayor": false, "like": false, "likes": { "count": 0, "groups": [] }, "photos": { "count": 0, "items": [] }, "posts": { "count": 0, "textCount": 0 }, "source": { "name": "Swarm for iOS", "url": "https://www.swarmapp.com" }, "timeZoneOffset": -480, "type": "checkin", "venue": { "allowMenuUrlEdit": true, "beenHere": { "lastCheckinExpiredAt": 0 }, "categories": [ { "icon": { "prefix": "https://ss3.4sqi.net/img/categories_v2/food/vietnamese_", "suffix": ".png" }, "id": "4bf58dd8d48988d14a941735", "name": "Vietnamese Restaurant", "pluralName": "Vietnamese Restaurants", "primary": true, "shortName": "Vietnamese" } ], "contact": { "formattedPhone": "(206) 325-2111", "phone": "2063252111", "twitter": "monsoonnw" }, "hasMenu": true, "id": "4391a4d9f964a5205e2b1fe3", "location": { "address": "615 19th Ave E", "cc": "US", "city": "Seattle", "country": "United States", "crossStreet": "at E Mercer St", "formattedAddress": [ "615 19th Ave E (at E Mercer St)", "Seattle, WA 98112" ], "labeledLatLngs": [ { "label": "display", "lat": 47.62479716487741, "lng": -122.30756968259811 } ], "lat": 47.62479716487741, "lng": -122.30756968259811, "postalCode": "98112", "state": "WA" }, "menu": { "anchor": "View Menu", "label": "Menu", "mobileUrl": "https://foursquare.com/v/4391a4d9f964a5205e2b1fe3/device_menu", "type": "Menu", "url": "https://foursquare.com/v/monsoon/4391a4d9f964a5205e2b1fe3/menu" }, "name": "Monsoon", "stats": { "checkinsCount": 2798, "tipCount": 48, "usersCount": 1470 }, "url": "http://www.monsoonseattle.com", "verified": false } }, { "comments": { "count": 0 }, "createdAt": 1485063103, "id": "588443bf2bc5e272f3f8ab3a", "isMayor": false, "like": false, "likes": { "count": 0, "groups": [] }, "photos": { "count": 0, "items": [] }, "posts": { "count": 0, "textCount": 0 }, "source": { "name": "Swarm for iOS", "url": "https://www.swarmapp.com" }, "timeZoneOffset": -480, "type": "checkin", "venue": { "allowMenuUrlEdit": true, "beenHere": { "lastCheckinExpiredAt": 0 }, "categories": [ { "icon": { "prefix": "https://ss3.4sqi.net/img/categories_v2/nightlife/pub_", "suffix": ".png" }, "id": "4bf58dd8d48988d116941735", "name": "Bar", "pluralName": "Bars", "primary": true, "shortName": "Bar" } ], "contact": { "formattedPhone": "(206) 245-1390", "phone": "2062451390" }, "hasMenu": true, "id": "4f3dffcae4b02787b3ae4674", "location": { "address": "719 E Pike St", "cc": "US", "city": "Seattle", "country": "United States", "crossStreet": "at Harvard Ave.", "formattedAddress": [ "719 E Pike St (at Harvard Ave.)", "Seattle, WA 98122" ], "labeledLatLngs": [ { "label": "display", "lat": 47.61405165530944, "lng": -122.32260390442656 } ], "lat": 47.61405165530944, "lng": -122.32260390442656, "postalCode": "98122", "state": "WA" }, "menu": { "anchor": "View Menu", "label": "Menu", "mobileUrl": "https://foursquare.com/v/4f3dffcae4b02787b3ae4674/device_menu", "type": "Menu", "url": "https://foursquare.com/v/saint-johns-bar--eatery/4f3dffcae4b02787b3ae4674/menu" }, "name": "Saint John's Bar & Eatery", "stats": { "checkinsCount": 3473, "tipCount": 23, "usersCount": 1614 }, "url": "http://saintjohnsseattle.com", "verified": false } }, { "comments": { "count": 0 }, "createdAt": 1484878945, "id": "58817461040d537fb5bb7f5b", "isMayor": false, "like": false, "likes": { "count": 0, "groups": [] }, "photos": { "count": 0, "items": [] }, "posts": { "count": 0, "textCount": 0 }, "source": { "name": "Swarm for iOS", "url": "https://www.swarmapp.com" }, "timeZoneOffset": -480, "type": "checkin", "venue": { "beenHere": { "lastCheckinExpiredAt": 0 }, "categories": [ { "icon": { "prefix": "https://ss3.4sqi.net/img/categories_v2/shops/technology_", "suffix": ".png" }, "id": "4bf58dd8d48988d125941735", "name": "Tech Startup", "pluralName": "Tech Startups", "primary": true, "shortName": "Tech Startup" } ], "contact": { "twitter": "twitterseattle" }, "id": "5048f16fe4b06b5821990507", "location": { "address": "1501 4th Ave", "cc": "US", "city": "Seattle", "country": "United States", "crossStreet": "Pike St", "formattedAddress": [ "1501 4th Ave (Pike St)", "Seattle, WA 98101" ], "labeledLatLngs": [ { "label": "display", "lat": 47.60979112600535, "lng": -122.33793551960332 } ], "lat": 47.60979112600535, "lng": -122.33793551960332, "postalCode": "98101", "state": "WA" }, "name": "Twitter Seattle", "stats": { "checkinsCount": 562, "tipCount": 1, "usersCount": 217 }, "venuePage": { "id": "135106709" }, "venueRatingBlacklisted": true, "verified": true } } ] } } } ];
 
 
 
-//usage:
-
-console.log(placesToEat);
-// console.log(text[0].response.checkins.items[1].venue.name);
+//                                                     // response.checkins.items[0].venue.categories[0].id
+//
+//
+//
+//
+// //usage:
+//
+// console.log(placesToEat);
+// // console.log(text[0].response.checkins.items[1].venue.name);
