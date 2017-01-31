@@ -375,35 +375,59 @@ app.get('/', function (req, res) {
     text = JSON.parse(data);
     var places = [];
 
+    // combining multiple arrays of checkins into one
     for (var i = 0 ; i < text.length; i++) {
       places = places.concat(text[i].response.checkins.items);
     }
-    // var places = text[0].response.checkins.items;     // give me only the array of checkin items
+
+    // response format: text[ ].response.checkins.items.venue.categories[ ].name
+
+    // var places = text[0].response.checkins.items;     // give me only the array of checkin items in text[0]
+
+    // format: places[ ].venue.categories[ ].name
     // console.log(places[0].venue.categories[0].name);
 
     var placesToEat = [];
     console.log('# of places', places.length);
 
    for (var i = 0; i < places.length; i++) {
+
       if (places[i].hasOwnProperty('venue')) {
+
+        // check that the venue.categories is in the list of valid categories before we do anything else
         if (function(category) {
             return categories.hasOwnProperty(category.name);
           }(places[i].venue.categories[0] || 'none')) {
 
-            // need to check if place is already in array. If not, add.
-            if (placesToEat.find(function (element) {
-              if (element.venue.name === places[i].venue.name) {
-                return element.venue.name;
+            // need to check if place is already in placesToEat. If not, add.
+            var place = placesToEat.find(function (element) {
+              if (element.details.venue.name === places[i].venue.name) {
+                return element;
               }
-            }) === undefined) {
-              placesToEat.push(places[i]);
-              summary += ('place ' + i + ': ' + places[i].venue.name + ' is a place to eat!<br />');
+            });
+
+            if (place === undefined) {
+              placesToEat.push(
+                {
+                  details: places[i],
+                  count: 1
+                });
+//              summary += ('place ' + i + ': ' + places[i].venue.name + ' is a place to eat!<br />');
+            }
+            else {
+              place.count++;
             }
         }
+      } else {
+        console.log('item', i, 'missing venue property');
       }
 
     }
     console.log('# of places to eat', placesToEat.length);
+
+    for (var i = 0; i < placesToEat.length; i++) {
+      summary += ('Eat at #' + i + ': ' + placesToEat[i].details.venue.name + '. Visited @ least ' + placesToEat[i].count +' times<br />');
+    }
 
     res.send(summary);
 
