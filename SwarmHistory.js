@@ -368,47 +368,43 @@ server.listen(port, function() {
 });
 
 app.get('/', function (req, res) {
-  // res.send('Hello World!');
+
   var summary = '';
   fs.readFile('data/foursquare_checkins.json', 'utf8', function (err, data) {
     if (err) throw err;
     text = JSON.parse(data);
     var places = [];
-    // for (var i = 0 ; i < text.length; i++) {
-      // places += text[i].response.checkins.items;
-      // places.push(text[0].response.checkins.items);
-      // places = text[0].response.checkins.items;
-    // }
 
     for (var i = 0 ; i < text.length; i++) {
       places = places.concat(text[i].response.checkins.items);
-      // console.log(i, places.length);
     }
-//    places = text[0].response.checkins.items;
-
     // var places = text[0].response.checkins.items;     // give me only the array of checkin items
     // console.log(places[0].venue.categories[0].name);
 
     var placesToEat = [];
     console.log('# of places', places.length);
-    console.log('# of places to eat', placesToEat.length);
 
-    for (var i = 0; i < places.length; i++) {
-      // console.log('i', i, places[i].venue.name);
-
+   for (var i = 0; i < places.length; i++) {
       if (places[i].hasOwnProperty('venue')) {
         if (function(category) {
-            // summary += ('checking '+ category.name + '<br />');
-            // console.log('checking...', category)
             return categories.hasOwnProperty(category.name);
           }(places[i].venue.categories[0] || 'none')) {
-            placesToEat.push(places[i]);
-            summary += ('place ' + i + ': ' + places[i].venue.name + ' is a place to eat!<br />');
-            // console.log(checkins[i].venue.name, ' is a place to eat!');
+
+            // need to check if place is already in array. If not, add.
+            if (placesToEat.find(function (element) {
+              if (element.venue.name === places[i].venue.name) {
+                return element.venue.name;
+              }
+            }) === undefined) {
+              placesToEat.push(places[i]);
+              summary += ('place ' + i + ': ' + places[i].venue.name + ' is a place to eat!<br />');
+            }
         }
       }
 
     }
+    console.log('# of places to eat', placesToEat.length);
+
     res.send(summary);
 
 
