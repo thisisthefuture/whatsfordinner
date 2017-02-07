@@ -369,7 +369,6 @@ server.listen(port, function() {
 
 function findPlaceByCity(query) {
   return placesToEat.filter(function(el) {
-    // console.log(data[0].details.venue.name);
     if (query === el.details.venue.location.city) {
       return el;
     }
@@ -378,7 +377,7 @@ function findPlaceByCity(query) {
 
 app.get('/', function (req, res) {
 
-  var summary = 'well...<br />';
+  var summary = '';
 
   fs.readFile('data/foursquare_checkins.json', 'utf8', function (err, data) {
     if (err) throw err;
@@ -401,19 +400,22 @@ app.get('/', function (req, res) {
 
       if (places[i].hasOwnProperty('venue')) {
 
-        // check that the venue.categories is in the list of valid categories before we do anything else
-        if (function(category) {
+        // check that 1. the venue.categories is in the list of valid categories before we do anything else
+        //            2. the venue is not marked closed
+        if ((function(category) {
             return categories.hasOwnProperty(category.name);
-          }(places[i].venue.categories[0] || 'none')) {
+          }(places[i].venue.categories[0] || 'none')) && !(function(isClosed) {
+              return isClosed;
+            }(places[i].venue.closed || false))
+          ) {
 
-            // need to check if place is already in placesToEat. If not, add.
-            var place = placesToEat.find(function (element) {
+            // Find if place is already in placesToEat.
+            // If not, let's add it and put visit count = 1. Otherwise, increment visit count.
+            if (placesToEat.find(function (element) {
               if (element.details.venue.name === places[i].venue.name) {
                 return element;
               }
-            });
-
-            if (place === undefined) {
+            }) === undefined) {
               placesToEat.push(
                 {
                   details: places[i],
@@ -421,7 +423,7 @@ app.get('/', function (req, res) {
                 });
             }
             else {
-              place.count++;
+              places.count++;
             }
         }
       } else {
@@ -431,11 +433,17 @@ app.get('/', function (req, res) {
     }
     console.log('# of places to eat', placesToEat.length);
 
-    var results = findPlaceByCity("Seattle");
+    var results = findPlaceByCity("Barcelona");
 
     for (var i = 0; i < results.length; i++) {
-      summary += ('Eat at #' + i + ': ' + results[i].details.venue.name + '. Visited @ least ' + results[i].count +' times<br />');
-      // summary === undefined ? );
+      summary += ('Eat at #' + i + ': ');
+      if (results[i].details.venue.hasOwnProperty('url')) {
+        summary += ('<a href="' + results[i].details.venue.url + '">' + results[i].details.venue.name + '</a>');
+      }
+      else {
+          summary += (results[i].details.venue.name);
+      }
+      summary += ('. Visited @ least ' + results[i].count +' times<br />');
     }
 
     res.send(summary);
