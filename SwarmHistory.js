@@ -6,6 +6,7 @@ var fromFile;
 // setting up an express app framework
 var express = require('express');
 var app = express();
+app.set('view engine', 'ejs');
 
 // configuring the port for our web server
 var port = process.env.PORT || 8000;
@@ -488,8 +489,52 @@ function buildPlaceList(place) {
   }
 }
 
+var passport = require('passport');
+// var FoursquareTokenStrategy = require('passport-foursquare-token');
+var FoursquareStrategy = require('passport-foursquare').Strategy;
+
+// TODO: do the right thing here later
+passport.serializeUser(function(user, done) {
+  done(null, user);
+});
+
+// TODO: do the right thing here later
+passport.deserializeUser(function(obj, done) {
+  done(null, obj);
+});
+
+const STRATEGY_CONFIG = {
+  clientID: 'FEZ41SNLALWCY2S31WJ1EDFQUUVR01SVQKBUU5F5DXY1YMVU',
+  clientSecret: 'H3Q1UFJBOC1VZLAFOO3ELADDE1VS1JAPFZSXWHWJ5VBN20YP',
+  callbackURL: "http://127.0.0.1:5000/auth/foursquare/callback"
+};
+
+var strategy = new FoursquareStrategy(STRATEGY_CONFIG, function(accessToken, refreshToken, profile, done) {
+    return done(null, profile);
+    // asynchronous verification, for effect...
+    // process.nextTick(function () {
+      
+    //   // To keep the example simple, the user's Foursquare profile is returned
+    //   // to represent the logged-in user.  In a typical application, you would
+    //   // want to associate the Foursquare account with a user record in your
+    //   // database, and return that user instead.
+    //   return done(null, profile);
+    // });
+  }
+);
+
+passport.use(strategy);
+
+// app.use(require('cookie-parser')()); not sure if I need this 
+
+// definately need express-session for foursquare passport authentication to work; don't know why yet
+app.use(require('express-session')({ secret: 'keyboard cat', resave: true, saveUninitialized: true }));
+app.use(passport.initialize());
+app.use(passport.session());
+
 // specifying the results to be shown when a user navigates to the root route
 app.get('/', function (req, res) {
+
   var summary = '';
 
   // return the list of places in the provided City
@@ -507,8 +552,51 @@ app.get('/', function (req, res) {
     summary += ('. Visited @ least ' + results[i].count +' times<br />');
   }
 
-  res.send(summary);
+  res.render('index', { output: summary, user: req.user});
+  // res.send(summary);
 });
+
+app.get('/account', ensureAuthenticated, function(req, res){
+  res.render('account', { user: req.user });
+});
+
+// GET /auth/foursquare
+//   Use passport.authenticate() as route middleware to authenticate the
+//   request.  The first step in Foursquare authentication will involve
+//   redirecting the user to foursquare.com.  After authorization, Foursquare
+//   will redirect the user back to this application at /auth/foursquare/callback
+app.get('/auth/foursquare',
+  passport.authenticate('foursquare'),
+  function(req, res){
+    // The request will be redirected to Foursquare for authentication, so this
+    // function will not be called.
+  });
+
+// GET /auth/foursquare/callback
+//   Use passport.authenticate() as route middleware to authenticate the
+//   request.  If authentication fails, the user will be redirected back to the
+//   login page.  Otherwise, the primary route function function will be called,
+//   which, in this example, will redirect the user to the home page.
+app.get('/auth/foursquare/callback', 
+  passport.authenticate('foursquare', { failureRedirect: '/' }),
+  function(req, res) {
+    res.redirect('/');
+  });
+
+// Simple route middleware to ensure user is authenticated.
+//   Use this route middleware on any resource that needs to be protected.  If
+//   the request is authenticated (typically via a persistent login session),
+//   the request will proceed.  Otherwise, the user will be redirected to the
+//   login page.
+function ensureAuthenticated(req, res, next) {
+  if (req.isAuthenticated()) { return next(); }
+  res.redirect('/')
+}
+
+// app.get('/login', function(req, res){
+//   res.render('login', { user: req.user });
+// });
+
 
 // a route to display all places
 app.get('/all', function (req, res) {
