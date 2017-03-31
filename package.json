@@ -21,6 +21,6 @@
     "express": "^4.15.2",
     "express-session": "^1.15.2",
     "passport": "^0.3.2",
-    "passport-foursquare": "^1.0.0",
+    "passport-foursquare": "^1.0.0"
   }
 }
