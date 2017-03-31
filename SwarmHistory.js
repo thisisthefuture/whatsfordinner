@@ -368,8 +368,11 @@ var categories = {
   "Speakeasy": "4bf58dd8d48988d1d4941735"
 };
 
-// array to store our results
+// array to store our results of places
 var placesToEat = [];
+
+// array to store all supported cities
+var placesVisited = [];
 
 // start up our webapp
 server.listen(port, function() {
@@ -384,11 +387,6 @@ function findPlaceByCity(query) {
     }
   });
 }
-
-// TODO: make a setup function for the list of places
-// update route behavior to show.... last 5 visits
-// create app routes for places... e.g., localhost/<city>
-// to return city specific results
 
 function setup() {
 
@@ -450,10 +448,15 @@ function setup() {
               }
             }) === undefined) {
               placesToEat.push(
-                {
-                  details: places[i],
-                  count: 1
-                });
+              {
+                details: places[i],
+                count: 1
+              });
+
+              // let's build our Places list, list of citys at the moment, while we're looping the array setting up
+              
+              buildPlaceList(places[i]);
+              
             }
             else {
               places.count++;
@@ -469,6 +472,22 @@ function setup() {
   });
 }
 
+// if the passed city is NOT in placesVisited add it.
+function buildPlaceList(place) {
+  if (placesVisited.find(function (element) {
+    if (element === place.venue.location.city) {
+      return element;
+    }
+  }) === undefined) {
+    console.log(place.venue.location.city)
+    if (place.venue.location.city != undefined)
+      placesVisited.push(place.venue.location.city);
+    else {
+      console.log('errr... undefined city');
+      console.log(place.venue.name);
+    }
+  }
+}
 
 // specifying the results to be shown when a user navigates to the root route
 app.get('/', function (req, res) {
@@ -494,16 +513,55 @@ app.get('/', function (req, res) {
 
 });
 
+// a route to display everything
+app.get('/all', function (req, res) {
+
+  var summary = '';
+
+  // build the list to be displayed to the user
+  for (var i = 0; i < placesToEat.length; i++) {
+    summary += ('Eat at #' + i + ': ');
+    if (placesToEat[i].details.venue.hasOwnProperty('url')) {
+      summary += ('<a href="' + placesToEat[i].details.venue.url + '">' + placesToEat[i].details.venue.name + '</a>');
+    }
+    else {
+        summary += (placesToEat[i].details.venue.name);
+    }
+    summary += ('. Visited @ least ' + placesToEat[i].count +' times<br />');
+  }
+
+  res.send(summary);  
+
+});
+
+// handling the URL routing without a city search term
+app.get('/city', function (req, res) {
+  var instructions = '';
+
+  if (placesVisited.length === 0) {
+    instructions = 'Whoops, no cities for some reason...';
+  }
+
+  instructions = placesVisited.toString();
+  
+  res.send(instructions);
+
+});
 
 // specifying a route to help do city queries
 app.get('/city/:city', function (req, res) {
 
+  var city = req.params.city;
   var summary = '';
 
   // return the list of places in the provided City
-  var results = findPlaceByCity(req.params.city);
-  console.log('looking at city = ', req.params.city);
+  var results = findPlaceByCity(city);
+  console.log('looking at city = ', city);
 
+  if (results.length === 0) {
+    summary = 'Can\'t find any places in ' + city;
+  }
+  
   // build the list to be displayed to the user
   for (var i = 0; i < results.length; i++) {
     summary += ('Eat at #' + i + ': ');
