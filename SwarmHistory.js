@@ -1,12 +1,18 @@
 var fs = require('fs');
-var text;
 
+// data from the imported raw file
+var fromFile;
+
+// setting up an express app framework
 var express = require('express');
 var app = express();
+
+// configuring the port for our web server
 var port = process.env.PORT || 8000;
 var server = require('http').Server(app);
 
-var categories = {                              // list of valid food/drinks related categories
+// list of valid food/drinks related categories from Swarm
+var categories = {
   "Food": "4d4b7105d754a06374d81259",
   "Afghan Restaurant": "503288ae91d4c4b30a586d67",
   "African Restaurant": "4bf58dd8d48988d1c8941735",
@@ -361,12 +367,16 @@ var categories = {                              // list of valid food/drinks rel
   "Other Nightlife": "4bf58dd8d48988d11a941735",
   "Speakeasy": "4bf58dd8d48988d1d4941735"
 };
+
+// array to store our results
 var placesToEat = [];
 
+// start up our webapp
 server.listen(port, function() {
     console.log("App is running on port " + port);
 });
 
+// function to filter our results by City
 function findPlaceByCity(query) {
   return placesToEat.filter(function(el) {
     if (query === el.details.venue.location.city) {
@@ -375,33 +385,56 @@ function findPlaceByCity(query) {
   });
 }
 
-app.get('/', function (req, res) {
+// TODO: make a setup function for the list of places
+// update route behavior to show.... last 5 visits
+// create app routes for places... e.g., localhost/<city>
+// to return city specific results
 
-  var summary = '';
+function setup() {
 
+  // read our static data
   fs.readFile('data/foursquare_checkins.json', 'utf8', function (err, data) {
     if (err) throw err;
-    text = JSON.parse(data);
+
+    // parse json to JS data structure
+    fromFile = JSON.parse(data);
+
+    // an array to store the raw, unfiltered, data    
     var places = [];
 
-    // combining multiple arrays of checkins into one
-    for (var i = 0 ; i < text.length; i++) {
-      places = places.concat(text[i].response.checkins.items);
+    // combining the multiple arrays of checkins into one
+    // JSON data is blocked to sections of 250 entries
+    for (var i = 0 ; i < fromFile.length; i++) {
+      places = places.concat(fromFile[i].response.checkins.items);
     }
 
-    // response format: text[ ].response.checkins.items.venue.categories[ ].name
-    // var places = text[0].response.checkins.items;     // give me only the array of checkin items in text[0]
-    // format: places[ ].venue.categories[ ].name
+    // response format: fromFile[ ].response.checkins.items.venue.categories[ ].name
+    // new shorter format: places[ ].venue.categories[ ].name
     // console.log(places[0].venue.categories[0].name);
 
-    console.log('# of places', places.length);
+    console.log('# of places in log', places.length);
 
+    // is loop cleans up the data from the JSON before we do any searches on it
     for (var i = 0; i < places.length; i++) {
 
+      // we only look at entries with a venue. If no venue, it's not a real place we care about
       if (places[i].hasOwnProperty('venue')) {
 
         // check that 1. the venue.categories is in the list of valid categories before we do anything else
         //            2. the venue is not marked closed
+
+        // How this IF statement works:
+        // The IF condition is the && of two function's boolean outputs.
+      
+        // Function #1: What gets passed to the function is the venue 
+        // category if it exists. Otherwise 'none' is passed.
+        // The function returns is a bool, the output of whether the master categories list has the passed
+        // function name.
+        // Function #2: What gets passed to this function is the boolean "closed" value for the venue if it exists.
+        // otherwise, false is passed to the function. The function simply returns what it is passed.
+        // Why this silly work? Because if we wanted to evaluate the places[i].venue.closed and
+        // places[i].venue.categories[0] properties directly, if they didn't exist, a error
+        // would be thrown.
         if ((function(category) {
             return categories.hasOwnProperty(category.name);
           }(places[i].venue.categories[0] || 'none')) && !(function(isClosed) {
@@ -410,7 +443,7 @@ app.get('/', function (req, res) {
           ) {
 
             // Find if place is already in placesToEat.
-            // If not, let's add it and put visit count = 1. Otherwise, increment visit count.
+            // If not, let's add it and put visit count = 1. Otherwise, it exists so increment visit count.
             if (placesToEat.find(function (element) {
               if (element.details.venue.name === places[i].venue.name) {
                 return element;
@@ -431,33 +464,60 @@ app.get('/', function (req, res) {
       }
 
     }
-    console.log('# of places to eat', placesToEat.length);
-
-    var results = findPlaceByCity("Barcelona");
-
-    for (var i = 0; i < results.length; i++) {
-      summary += ('Eat at #' + i + ': ');
-      if (results[i].details.venue.hasOwnProperty('url')) {
-        summary += ('<a href="' + results[i].details.venue.url + '">' + results[i].details.venue.name + '</a>');
-      }
-      else {
-          summary += (results[i].details.venue.name);
-      }
-      summary += ('. Visited @ least ' + results[i].count +' times<br />');
-    }
-
-    res.send(summary);
+    console.log('# of unique places to eat', placesToEat.length);
 
   });
+}
+
+
+// specifying the results to be shown when a user navigates to the root route
+app.get('/', function (req, res) {
+
+  var summary = '';
+
+  // return the list of places in the provided City
+  var results = findPlaceByCity("Seattle");
+
+  // build the list to be displayed to the user
+  for (var i = 0; i < results.length; i++) {
+    summary += ('Eat at #' + i + ': ');
+    if (results[i].details.venue.hasOwnProperty('url')) {
+      summary += ('<a href="' + results[i].details.venue.url + '">' + results[i].details.venue.name + '</a>');
+    }
+    else {
+        summary += (results[i].details.venue.name);
+    }
+    summary += ('. Visited @ least ' + results[i].count +' times<br />');
+  }
+
+  res.send(summary);
+
 });
 
 
-//                                                     // response.checkins.items[0].venue.categories[0].id
-//
-//
-//
-//
-// //usage:
-//
-// console.log(placesToEat);
-// // console.log(text[0].response.checkins.items[1].venue.name);
+// specifying a route to help do city queries
+app.get('/city/:city', function (req, res) {
+
+  var summary = '';
+
+  // return the list of places in the provided City
+  var results = findPlaceByCity(req.params.city);
+  console.log('looking at city = ', req.params.city);
+
+  // build the list to be displayed to the user
+  for (var i = 0; i < results.length; i++) {
+    summary += ('Eat at #' + i + ': ');
+    if (results[i].details.venue.hasOwnProperty('url')) {
+      summary += ('<a href="' + results[i].details.venue.url + '">' + results[i].details.venue.name + '</a>');
+    }
+    else {
+        summary += (results[i].details.venue.name);
+    }
+    summary += ('. Visited @ least ' + results[i].count +' times<br />');
+  }
+
+  res.send(summary);
+
+});
+
+setup();
