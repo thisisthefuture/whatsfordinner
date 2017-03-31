@@ -379,7 +379,7 @@ server.listen(port, function() {
     console.log("App is running on port " + port);
 });
 
-// function to filter our results by City
+// Filter results by City
 function findPlaceByCity(query) {
   return placesToEat.filter(function(el) {
     if (query === el.details.venue.location.city) {
@@ -388,6 +388,7 @@ function findPlaceByCity(query) {
   });
 }
 
+// Sets up the placesToEat array from the json file
 function setup() {
 
   // read our static data
@@ -479,19 +480,16 @@ function buildPlaceList(place) {
       return element;
     }
   }) === undefined) {
-    console.log(place.venue.location.city)
     if (place.venue.location.city != undefined)
       placesVisited.push(place.venue.location.city);
     else {
-      console.log('errr... undefined city');
-      console.log(place.venue.name);
+      console.log('errr... undefined city with', place.venue.name);
     }
   }
 }
 
 // specifying the results to be shown when a user navigates to the root route
 app.get('/', function (req, res) {
-
   var summary = '';
 
   // return the list of places in the provided City
@@ -510,12 +508,10 @@ app.get('/', function (req, res) {
   }
 
   res.send(summary);
-
 });
 
-// a route to display everything
+// a route to display all places
 app.get('/all', function (req, res) {
-
   var summary = '';
 
   // build the list to be displayed to the user
@@ -531,7 +527,6 @@ app.get('/all', function (req, res) {
   }
 
   res.send(summary);  
-
 });
 
 // handling the URL routing without a city search term
@@ -542,13 +537,15 @@ app.get('/city', function (req, res) {
     instructions = 'Whoops, no cities for some reason...';
   }
 
-  instructions = placesVisited.toString();
-  
+  for (var i = 0 ; i < placesVisited.length; i++) {
+    instructions += ('<a href="/city/' + placesVisited[i] + '">' + placesVisited[i] + '</a>&nbsp;&nbsp;');
+  }
+ 
   res.send(instructions);
 
 });
 
-// specifying a route to help do city queries
+// specifying a route to do city queries
 app.get('/city/:city', function (req, res) {
 
   var city = req.params.city;
