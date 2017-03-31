@@ -504,9 +504,9 @@ passport.deserializeUser(function(obj, done) {
 });
 
 const STRATEGY_CONFIG = {
-  clientID: 'FEZ41SNLALWCY2S31WJ1EDFQUUVR01SVQKBUU5F5DXY1YMVU',
-  clientSecret: 'H3Q1UFJBOC1VZLAFOO3ELADDE1VS1JAPFZSXWHWJ5VBN20YP',
-  callbackURL: "http://127.0.0.1:5000/auth/foursquare/callback"
+  clientID: '--client--',
+  clientSecret: '--secrets--',
+  callbackURL: "--callback--"
 };
 
 var strategy = new FoursquareStrategy(STRATEGY_CONFIG, function(accessToken, refreshToken, profile, done) {
