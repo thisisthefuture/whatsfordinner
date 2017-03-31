@@ -493,7 +493,7 @@ var passport = require('passport');
 // var FoursquareTokenStrategy = require('passport-foursquare-token');
 var FoursquareStrategy = require('passport-foursquare').Strategy;
 
-// TODO: do the right thing here later
+// TODO: do the right thing here later, e.g., http://mherman.org/blog/2015/09/26/social-authentication-in-node-dot-js-with-passport/
 passport.serializeUser(function(user, done) {
   done(null, user);
 });
@@ -504,12 +504,15 @@ passport.deserializeUser(function(obj, done) {
 });
 
 const STRATEGY_CONFIG = {
-  clientID: 'FEZ41SNLALWCY2S31WJ1EDFQUUVR01SVQKBUU5F5DXY1YMVU',
-  clientSecret: 'H3Q1UFJBOC1VZLAFOO3ELADDE1VS1JAPFZSXWHWJ5VBN20YP',
-  callbackURL: "http://127.0.0.1:5000/auth/foursquare/callback"
+  clientID: '--client--',
+  clientSecret: '--secrets--',
+  callbackURL: "--callback--"
 };
 
+var token = '';
 var strategy = new FoursquareStrategy(STRATEGY_CONFIG, function(accessToken, refreshToken, profile, done) {
+    console.log('accessToken = ', accessToken); // TODO: store this somewhere and have it be associated w/the user
+    token = accessToken;
     return done(null, profile);
     // asynchronous verification, for effect...
     // process.nextTick(function () {
@@ -566,11 +569,7 @@ app.get('/account', ensureAuthenticated, function(req, res){
 //   redirecting the user to foursquare.com.  After authorization, Foursquare
 //   will redirect the user back to this application at /auth/foursquare/callback
 app.get('/auth/foursquare',
-  passport.authenticate('foursquare'),
-  function(req, res){
-    // The request will be redirected to Foursquare for authentication, so this
-    // function will not be called.
-  });
+  passport.authenticate('foursquare'));
 
 // GET /auth/foursquare/callback
 //   Use passport.authenticate() as route middleware to authenticate the
@@ -597,6 +596,46 @@ function ensureAuthenticated(req, res, next) {
 //   res.render('login', { user: req.user });
 // });
 
+var checkinURL = 'https://api.foursquare.com/v2/users/self/checkins?limit=250&v=20131016&offet=';
+
+app.get('/recent', ensureAuthenticated, function(req, res) {
+  function done(checkins) {
+    var recent = '';
+    recent = 'Recently visited ' + checkins.list[0][0].venue.name;
+    res.send(recent);
+  }
+
+  passport._strategies.foursquare._oauth2.get('https://api.foursquare.com/v2/users/self/checkins?v=20131016', token, function (err, body, res) {
+    var json;
+    
+    if (err) {
+      if (err.data) {
+        try {
+          json = JSON.parse(err.data);
+        } catch (_) {}
+      }
+      
+      // if (json && json.meta && json.meta.errorType) {
+      //   return done(new APIError(json.meta.errorDetail, json.meta.errorType, json.meta.code));
+      // }
+      // return done(new InternalOAuthError('Failed to get checkin info', err));
+    }
+
+    console.log('hmmm');
+    try {
+      json = JSON.parse(body);
+    } catch (ex) {
+      // return done(new Error('Failed to get checkins'));
+    }
+
+    var checkins = require('./checkins').parse(json);
+    // checkin.provider = 'foursquare';
+    // checkin._raw = body;
+    // checkin._json = json;
+    
+    done(checkins);
+  });
+});
 
 // a route to display all places
 app.get('/all', function (req, res) {
