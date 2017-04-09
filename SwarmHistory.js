@@ -414,15 +414,10 @@ function setup() {
 
     console.log('# of places in log', places.length);
 
-    // Lets loop and clean up the data we received.
-    // We'll only use only places in the JSON that have 
-    // 1. a venue property, 
-    // 2. a category & a valid category, 
-    // 3. is not closed, and 
-    // let's have our list be of unique places, keeping track of multiple known visits
+    // is loop cleans up the data from the JSON before we do any searches on it
     for (var i = 0; i < places.length; i++) {
 
-      // If no venue, it's not a real place we care about
+      // we only look at entries with a venue. If no venue, it's not a real place we care about
       if (places[i].hasOwnProperty('venue')) {
 
         // check that 1. the venue.categories is in the list of valid categories before we do anything else
@@ -433,12 +428,10 @@ function setup() {
       
         // Function #1: What gets passed to the function is the venue 
         // category if it exists. Otherwise 'none' is passed.
-        // This function returns is a bool, the output of whether the master categories list has the provided
+        // The function returns is a bool, the output of whether the master categories list has the passed
         // function name.
-
         // Function #2: What gets passed to this function is the boolean "closed" value for the venue if it exists.
-        // otherwise, false is passed to the function. This function simply returns what it is passed.
-
+        // otherwise, false is passed to the function. The function simply returns what it is passed.
         // Why this silly work? Because if we wanted to evaluate the places[i].venue.closed and
         // places[i].venue.categories[0] properties directly, if they didn't exist, a error
         // would be thrown.
@@ -451,13 +444,11 @@ function setup() {
 
             // Find if place is already in placesToEat.
             // If not, let's add it and put visit count = 1. Otherwise, it exists so increment visit count.
-            var ele = placesToEat.find(function (element) {
+            if (placesToEat.find(function (element) {
               if (element.details.venue.name === places[i].venue.name) {
                 return element;
               }
-            });
-
-            if (ele === undefined) {
+            }) === undefined) {
               placesToEat.push(
               {
                 details: places[i],
@@ -465,15 +456,18 @@ function setup() {
               });
 
               // let's build our Places list, list of citys at the moment, while we're looping the array setting up
-              buildPlaceList(places[i]);      
+              
+              buildPlaceList(places[i]);
+              
             }
             else {
-              ele.count++;
+              places.count++;
             }
         }
       } else {
         console.log('item', i, 'missing venue property');
       }
+
     }
     console.log('# of unique places to eat', placesToEat.length);
 
@@ -496,6 +490,7 @@ function buildPlaceList(place) {
 }
 
 var passport = require('passport');
+// var FoursquareTokenStrategy = require('passport-foursquare-token');
 var FoursquareStrategy = require('passport-foursquare').Strategy;
 
 // TODO: do the right thing here later, e.g., http://mherman.org/blog/2015/09/26/social-authentication-in-node-dot-js-with-passport/
@@ -509,9 +504,9 @@ passport.deserializeUser(function(obj, done) {
 });
 
 const STRATEGY_CONFIG = {
-  clientID: 'FEZ41SNLALWCY2S31WJ1EDFQUUVR01SVQKBUU5F5DXY1YMVU',
-  clientSecret: 'H3Q1UFJBOC1VZLAFOO3ELADDE1VS1JAPFZSXWHWJ5VBN20YP',
-  callbackURL: "http://127.0.0.1:5000/auth/foursquare/callback"
+  clientID: '--client--',
+  clientSecret: '--secrets--',
+  callbackURL: "--callback--"
 };
 
 var token = '';
@@ -601,89 +596,45 @@ function ensureAuthenticated(req, res, next) {
 //   res.render('login', { user: req.user });
 // });
 
-var offset = 0;
-var itemsRemain = true;
-var data = [];
-
-function printArrayOfPlaces(list) {
-  var summary = '';
-  // for (var i = 0 ; i < list.length; i++) {
-  //   summary += i + ': ' + list[i].details.venue.name + '\n';
-  // }
-
-
-  // build the list to be displayed to the user
-  for (var i = 0; i < list.length; i++) {
-    summary += ('Eat at #' + i + ': ');
-    if (list[i].details.venue.hasOwnProperty('url')) {
-      summary += ('<a href="' + list[i].details.venue.url + '">' + list[i].details.venue.name + '</a>');
-    }
-    else {
-        summary += (list[i].details.venue.name);
-    }
-    summary += ('. Visited @ least ' + list[i].count +' times<br />');
-  }
-
-  return summary;
-}
+var checkinURL = 'https://api.foursquare.com/v2/users/self/checkins?limit=250&v=20131016&offet=';
 
 app.get('/recent', ensureAuthenticated, function(req, res) {
-  var checkinURL = 'https://api.foursquare.com/v2/users/self/checkins?limit=250&v=20131016&offset=';
-
-  // defining our RetrievePlaces method to kick-off our recurrsion RetrievePlacesHelper()
-  function RetrievePlaces() {
-
-      // passing our initial offset, and an empty array which will store the GET's json result
-      RetrievePlacesHelper(0, []);
+  function done(checkins) {
+    var recent = '';
+    recent = 'Recently visited ' + checkins.list[0][0].venue.name;
+    res.send(recent);
   }
 
-  // accepts  offset, and our places array that stores the GET's json result
-  function RetrievePlacesHelper(offset, places) {
-      // calling our get request
-      // passing our checkin URL with offset, token, and callback function to process
-      // the result of our GET request
-      passport._strategies.foursquare._oauth2.get(checkinURL + offset, token, function(err, body, res) {
-          var json;
-              
-          if (err) {
-              if (err.data) {
-                  try {
-                      json = JSON.parse(err.data);
-                  } catch (_) {}
-              }
-          }
-          try {
-                  json = JSON.parse(body);
-              } catch (ex) {
-                  // return done(new Error('Failed to get checkins'));
-              }
+  passport._strategies.foursquare._oauth2.get('https://api.foursquare.com/v2/users/self/checkins?v=20131016', token, function (err, body, res) {
+    var json;
+    
+    if (err) {
+      if (err.data) {
+        try {
+          json = JSON.parse(err.data);
+        } catch (_) {}
+      }
       
-          // if no results come back, that means we are done collecting the json responses
-          // we can now convert the json response to a data structure we can use to get checkin info
-          if (json.response.checkins.items == 0) {
-              displayMyStuff(places);
-          } else {
-              console.log(json);
+      // if (json && json.meta && json.meta.errorType) {
+      //   return done(new APIError(json.meta.errorDetail, json.meta.errorType, json.meta.code));
+      // }
+      // return done(new InternalOAuthError('Failed to get checkin info', err));
+    }
 
-              // got more items to process, so let's increase our offset
-              // and call RetrievePlacesHelper again, with our new offset, and what we've
-              // got from the server so far (and have stored handily in places[])
-              RetrievePlacesHelper(offset+250, places.concat(json));
-          }
-      });
-  }
+    console.log('hmmm');
+    try {
+      json = JSON.parse(body);
+    } catch (ex) {
+      // return done(new Error('Failed to get checkins'));
+    }
 
-  // print out the checkin info we have
-  function displayMyStuff(places) {
-      var checkins = require('./checkins').parse(places);
-      summary = 'Recently visited:<br />' + printArrayOfPlaces(checkins);
-      console.log(summary);
-      res.send(summary);
-  }
-
-  // start our work
-  RetrievePlaces();
-
+    var checkins = require('./checkins').parse(json);
+    // checkin.provider = 'foursquare';
+    // checkin._raw = body;
+    // checkin._json = json;
+    
+    done(checkins);
+  });
 });
 
 // a route to display all places
@@ -750,7 +701,5 @@ app.get('/city/:city', function (req, res) {
   res.send(summary);
 
 });
-
-app.listen(5000);
 
 setup();
