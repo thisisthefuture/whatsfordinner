@@ -1,6 +1,12 @@
 # Dependency directories
 node_modules/
 
+# Files saved as *.gitignore
+*.gitignore
+
+# Files used to run in vscode
+.vscode/
+
 # Windows image file caches
 Thumbs.db
 ehthumbs.db
