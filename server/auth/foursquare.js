@@ -27,13 +27,6 @@ passport.use(new FoursquareStrategy({
     var options = {
         upsert: true
     }
-
-    // 4/10/2017
-    // with findOneAndUpdate block uncommented, there's a bug where returning back to '/' doesn't work
-    // we're stuck on the /login route screen.
-    // if we remove the findOneAndUpdate and the deserialize/serialize logic from init.js
-    // the world is fine...
-    // >___<
     
     // check if foursquare_id exists in database, if so, return known user
     User.findOneAndUpdate(searchQuery, updates, options, function(err, user) {
