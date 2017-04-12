@@ -4,7 +4,8 @@
   "description": "Full Name - the Sage & Alice What's for Dinner App. This app will remind us of what places we love to have dinner at.",
   "main": "SwarmHistory.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node SwarmHistory.js"
   },
   "repository": {
     "type": "git",
@@ -20,6 +21,7 @@
     "ejs": "^2.5.6",
     "express": "^4.15.2",
     "express-session": "^1.15.2",
+    "mongoose": "^4.9.4",
     "passport": "^0.3.2",
     "passport-foursquare": "^1.0.0"
   }

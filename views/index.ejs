@@ -1,7 +1,7 @@
 <% if (!user) { %>
 	<h2>Welcome! Please <a href="/auth/foursquare">log in</a>.</h2>
 <% } else { %>
-	<h2>Hello, <%= user.name.givenName %>.</h2>
+	<h2>Hello, <%= user._doc.name %>.</h2>
 <% } %>
 
 <%- output %>

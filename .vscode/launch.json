@@ -23,7 +23,7 @@
             "type": "node",
             "request": "launch",
             "name": "Launch Program",
-            "program": "${workspaceRoot}\\SwarmHistory.js",
+            "program": "${workspaceRoot}\\server\\app.js",
             "cwd": "${workspaceRoot}"
         },
         {

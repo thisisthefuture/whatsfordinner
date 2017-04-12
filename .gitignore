@@ -4,6 +4,9 @@ node_modules/
 # Explicit files with *.gitignore
 *.gitignore
 
+# Config file
+server/_config.js
+
 # Files used for VS Code
 .vscode/
 
