@@ -8,7 +8,7 @@ var port = process.env.PORT || 8000;
 var server = require('http').Server(app);
 
 // get list of valid food/drinks related categories from Swarm
-var categories = require('../data/categories.js');
+var categories = require('./data/categories.js');
 
 var fs = require('fs');
 
@@ -39,7 +39,7 @@ server.listen(port, function() {
 function setup() {
 
   // read our static data
-  fs.readFile('data/foursquare_checkins.json', 'utf8', function (err, data) {
+  fs.readFile('./static_data/foursquare_checkins.json', 'utf8', function (err, data) {
     if (err) throw err;
 
     // parse json to JS data structure
@@ -151,8 +151,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 var mongoose = require('mongoose');
-mongoose.connect('mongodb://whatsfordinner:StephensMom2000!@ds157390.mlab.com:57390/whatsfordinner');
-// mongoose.connect('mongodb://localhost/whatsfordinner');
+mongoose.connect(require('./_config').mongoose.url);
 
 var passportFoursquare = require('./auth/foursquare');
 
@@ -170,7 +169,7 @@ app.get('/auth/foursquare',
 //   login page.  Otherwise, the primary route function function will be called,
 //   which, in this example, will redirect the user to the home page.
 app.get('/auth/foursquare/callback', 
-  passportFoursquare.authenticate('foursquare', { failureRedirect: '/login' }),
+  passportFoursquare.authenticate('foursquare', { failureRedirect: '/' }),
   function(req, res) {
     // res.json(req.user);
     res.redirect('/');
@@ -183,14 +182,52 @@ app.get('/auth/foursquare/callback',
 //   login page.
 function ensureAuthenticated(req, res, next) {
   if (req.isAuthenticated()) { return next(); }
-  res.redirect('/login')
+  res.redirect('/')
 }
 
 // specifying the results to be shown when a user navigates to the root route
 app.get('/', function (req, res) {
 
-  var summary = '';
+  if (req.user) {
+    console.log('User exists! Their name is', req.user._doc.name);
+    console.log('token', req.user._doc.oauth_token);
+    getCheckins();
+  } else {
+    console.log('No user yet');
+    var summary = '';
+    res.render('index', { output: summary, user: req.user});
+  }
 
+  function getCheckins() {
+
+    getCheckinsHelper();
+  }
+
+  function getCheckinsHelper() {
+     placesToEat.splice(0, placesToEat.length);
+
+    // placesToEat = require('./loadCheckins').getPlaces(req.user.id, req.user._doc.oauth_token);
+
+    var summary = '';
+    var loadCheckins = require('./loadCheckins');
+    loadCheckins.getPlaces(req.user._doc.foursquare_id, req.user._doc.oauth_token, function(places) {
+      summary = 'Recently visited:<br />' + printArrayOfPlaces(places);
+      res.render('index', { output: summary, user: req.user});
+    });
+    // summary = 'Recently visited:<br />' + printArrayOfPlaces(findPlaceByCity("Seattle"));
+    
+  }
+
+  
+});
+
+app.get('/account', ensureAuthenticated, function(req, res){
+  res.render('account', { user: req.user });
+});
+
+app.get('/login', function(req, res){
+  var summary = '';
+  
   // return the list of places in the provided City
   var results = findPlaceByCity("Seattle");
 
@@ -206,21 +243,12 @@ app.get('/', function (req, res) {
     summary += ('. Visited @ least ' + results[i].count +' times<br />');
   }
 
-  res.render('index', { output: summary, user: req.user});
-
+  res.render('login',  { output: summary, user: req.user });
 });
 
-app.get('/account', ensureAuthenticated, function(req, res){
-  res.render('account', { user: req.user });
-});
-
-app.get('/login', function(req, res){
-  res.render('login', { user: req.user });
-});
-
-var offset = 0;
-var itemsRemain = true;
-var data = [];
+// var offset = 0;
+// var itemsRemain = true;
+// var data = [];
 
 function printArrayOfPlaces(list) {
   var summary = '';
@@ -255,7 +283,7 @@ app.get('/recent', ensureAuthenticated, function(req, res) {
       // calling our get request
       // passing our checkin URL with offset, token, and callback function to process
       // the result of our GET request
-      passport._strategies.foursquare._oauth2.get(checkinURL + offset, token, function(err, body, res) {
+      passport._strategies.foursquare._oauth2.get(checkinURL + offset, req.user._doc.oauth_token, function(err, body, res) {
           var json;
               
           if (err) {
@@ -288,11 +316,11 @@ app.get('/recent', ensureAuthenticated, function(req, res) {
 
   // print out the checkin info we have
   function displayMyStuff(places) {
-      // var checkins = require('./checkins').parse(places);
 
       // cleaning the existing array to replace it with updated data
       placesToEat.splice(0, placesToEat.length);
       placesToEat = require('./checkins').parse(places);
+
       summary = 'Recently visited:<br />' + printArrayOfPlaces(placesToEat);
       console.log(summary);
       res.send(summary);

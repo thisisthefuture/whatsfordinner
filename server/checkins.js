@@ -74,8 +74,10 @@ exports.parse = function (json) {
             }(places[i].venue.closed || false))
           ) {
 
-             // Find if place is already in placesToEat.
+            // Find if place is already in placesToEat by venue name
             // If not, let's add it and put visit count = 1. Otherwise, it exists so increment visit count.
+            // limitation: if I went to multiple places with the same name, they're counted as one place
+            // e.g., Sizzle Pie in Portland (which I visited years ago and forgot about) vs. in Seattle
             var ele = placesToEat.find(function (element) {
               if (element.details.venue.name === places[i].venue.name) {
                 return element;

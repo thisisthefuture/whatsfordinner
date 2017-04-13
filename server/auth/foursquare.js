@@ -19,8 +19,8 @@ passport.use(new FoursquareStrategy({
     var updates = {
         name: profile.name.givenName,
         foursquare_emails: profile.emails,
-        someID: profile.id,
-        oauth_token: accessToken        
+        foursquare_id: profile.id,
+        oauth_token: accessToken
     };
 
     // setting upserts = true creates the object if it doesn't exist. defaults to false.
@@ -33,13 +33,37 @@ passport.use(new FoursquareStrategy({
         if(err) {
             return done(err);
         } else {
+            if (user) {
+                if (user._doc.swarm_checkins_total === profile._json.response.user.checkins.count) {
+                    var updates = {
+                        checkin_update_needed: false
+                    }
+                    User.findOneAndUpdate(searchQuery, updates, options, function (err, user) {
+                        if (err) { console.error(err); }
+                        console.log('setting updates = false');
+                    });
+                }
+                else if (user._doc.swarm_checkins_total === undefined || user._doc.swarm_checkins_total < profile._json.response.user.checkins.count) {
+                    var updates = {
+                        checkin_update_needed: true,
+                        swarm_checkins_total: profile._json.response.user.checkins.count
+                    }
+                    User.findOneAndUpdate(searchQuery, updates, options, function (err, user) {
+                        if (err) { console.error(err); }
+                        console.log('setting updates = true');
+                    });
+                } else {
+                    console.error('can\t compare checkins total with latest from profile.')
+                }
+            }
+            // is the total of known check ins (in the db) < what we're seeing from the latest service call?
+            // if yes, set the flag that checkins need to be updated to true; else false
+           
             return done(null, user);
         }
     });
-    // return done(null, profile);
   }
 ));
-
 
 // serialize user into the session
 init();

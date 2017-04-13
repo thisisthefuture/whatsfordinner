@@ -8,6 +8,8 @@ var User = new Schema({
   foursquare_emails: Array,
   // id: String,
   oauth_token: String,
+  swarm_checkins_total: Number,
+  checkin_update_needed: Boolean,
   checkins: Array
 });
 
