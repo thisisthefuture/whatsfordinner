@@ -2,6 +2,7 @@
 For information on the 'product', check out the wiki: https://github.com/thisisthefuture/whatsfordinner/wiki
 
 To run the code on your own, remember to have a .env file in the root that specifies
+
 FOURSQUARE_CALLBACKURL=[your callback URL]
 
 FOURSQUARE_CLIENTID=[your clientID]
