@@ -248,7 +248,7 @@ function printDetails(ele, lastDate) {
   }
 
   if (lastDate) {
-    summary += ('. Last visited on ' + moment(ele.details.createdAt * 1000).format('LL') +'<br />');
+    summary += ('. Last known visit on ' + moment(ele.details.createdAt * 1000).format('LL') +'<br />');
   }
   else {
     summary += ('. Visited @ least ' + ele.count +' times<br />');

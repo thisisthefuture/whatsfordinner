@@ -19,18 +19,19 @@
         "console": "integratedTerminal",
         "internalConsoleOptions": "neverOpen"
     },
-        {
-            "type": "node",
-            "request": "launch",
-            "name": "Launch Program",
-            "program": "${workspaceRoot}\\server\\app.js",
-            "cwd": "${workspaceRoot}"
-        },
-        {
-            "type": "node",
-            "request": "attach",
-            "name": "Attach to Process",
-            "port": 5858
-        }
+    {
+        "type": "node",
+        "request": "launch",
+        "name": "Launch Program",
+        "program": "${workspaceRoot}\\server\\app.js",
+        "cwd": "${workspaceRoot}",
+        "envFile": "${workspaceRoot}/.env"
+    },
+    {
+        "type": "node",
+        "request": "attach",
+        "name": "Attach to Process",
+        "port": 5858
+    }
     ]
 }

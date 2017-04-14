@@ -2,14 +2,7 @@ var passport = require('passport');
 var FoursquareStrategy = require('passport-foursquare').Strategy;
 
 var User = require('../models/user');
-var config = require('../_config');
 var init = require('./init');
-
-// define our strategy config, either from the process env var if it exists, otherwise 
-// use config file
-process.env.FOURSQUARE_CLIENTID = process.env.FOURSQUARE_CLIENTID || config.foursquare.clientID;
-process.env.FOURSQUARE_CLIENTSECRET = process.env.FOURSQUARE_CLIENTSECRET || config.foursquare.clientSecret;
-process.env.FOURSQUARE_CALLBACKURL = process.env.FOURSQUARE_CALLBACKURL || config.foursquare.callbackURL
 
 passport.use(new FoursquareStrategy({
     clientID: process.env.FOURSQUARE_CLIENTID,
