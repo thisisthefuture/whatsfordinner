@@ -13,11 +13,6 @@ var moment = require("moment");
 // get list of valid food/drinks related categories from Swarm
 var categories = require('./data/categories.js');
 
-var fs = require('fs');
-
-// data from the imported raw file
-var fromFile;
-
 // array to store our results of places
 var placesToEat = [];
 
@@ -37,6 +32,11 @@ function findPlaceByCity(query) {
 server.listen(port, function() {
     console.log("App is running on port " + port);
 });
+
+// var fs = require('fs');
+
+// // data from the imported raw file
+// var fromFile;
 
 // Sets up the placesToEat array from the json file
 // function setup() {
@@ -145,18 +145,18 @@ function buildPlaceList(place) {
 }
 
 var passport = require('passport');
-
+var passportFoursquare = require('./auth/foursquare');
 // app.use(require('cookie-parser')()); not sure if I need this 
 
-// definately need express-session for foursquare passport authentication to work; don't know why yet
+// need express-session for foursquare passport authentication to work; don't know why yet
 app.use(require('express-session')({ secret: 'keyboard cat', resave: true, saveUninitialized: true }));
 app.use(passport.initialize());
 app.use(passport.session());
 
+// connect to mongo database
 var mongoose = require('mongoose');
-mongoose.connect(require('./_config').mongoose.url);
-
-var passportFoursquare = require('./auth/foursquare');
+process.env.MONGOOSE_URL = process.env.MONGOOSE_URL || require('./_config').mongoose.url
+mongoose.connect(process.env.MONGOOSE_URL);
 
 // GET /auth/foursquare
 //   Use passport.authenticate() as route middleware to authenticate the
@@ -188,7 +188,7 @@ function ensureAuthenticated(req, res, next) {
   res.redirect('/')
 }
 
-// specifying the results to be shown when a user navigates to the root route
+// The results to be shown when a user navigates to the root route
 app.get('/', function (req, res) {
 
   if (req.user) {
@@ -206,12 +206,8 @@ app.get('/', function (req, res) {
     getCheckinsHelper();
   }
 
+  // Determins if we have a list of placesToEat to work with already or if we need to load them
   function getCheckinsHelper() {
-
-    // TODO: have logic to tell if an update is needed before we blow away the array and run through the
-    // rest of this method...
-
-    var loadCheckins = require('./loadCheckins');
 
     // crude check to avoid making calls to foursquare or the db
     // TODO: make this check more practical to getting updates while a session is alive
@@ -220,6 +216,7 @@ app.get('/', function (req, res) {
       var suggestion = bubblingTheOlder(placesToEat);
       res.render('index', { recent: recent, suggestion: suggestion, user: req.user});
     } else {
+      var loadCheckins = require('./loadCheckins');
       loadCheckins.getPlaces(req.user._doc.foursquare_id, req.user._doc.oauth_token, function(places) {
         placesToEat = places.venues;
         placesVisited = places.locations;
@@ -227,10 +224,7 @@ app.get('/', function (req, res) {
         var suggestion = bubblingTheOlder(placesToEat);
         res.render('index', { recent: recent, suggestion: suggestion, user: req.user});
       });
-    }
-    
-
-    
+    }    
   }
 });
 

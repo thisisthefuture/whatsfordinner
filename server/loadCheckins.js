@@ -6,15 +6,15 @@ var options = { upsert: true };
 
 // with token, get user's check_in account
 // compare collection's checkin_count with 
-// what the API returns...
-// if collection check_in === GET check_in, read from DB
-// if colleciton check_in < GET check_in
-// make GET request, then parse results raw using ./checkins
+// what the API returns.
+// if collection's check_in === GET check_in, read from DB
+// if colleciton's check_in < GET check_in make GET request, 
+
+// then parse results raw using ./checkins
 // with what ./checkins returns (an array), update db
 // else... awkward...that our db have more check_in than Swarm
 
 exports.getPlaces = function (id, token, callback) {
-
     searchQuery.foursquare_id = id;
 
     User.find(searchQuery, function (err, user) {
