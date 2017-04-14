@@ -299,7 +299,15 @@ function bubblingTheOlder(list) {
   // TODO: Fix this to handle if all check-ins are within the last 10 days...
   while (suggestion === '') {
     index = Math.floor(Math.random() * (results.length - 0));
+
+    // to manually check how many tries we take to find a suggestion fitting the 10+ day threshold
+    // ideally should see this only once
+    // for people with only very new checkins: suggest something they haven't been to in the area
+    
     console.log('attempt');
+
+    // TODO: add logic to handle ambigious places (e.g., which Serious Pie have I been to recently?)
+    // ... e.g., in print out of details, mention its street + city
     // if createdAt (last seen this check in) at least 10 days old
     if (moment(results[index].details.createdAt * 1000).isBefore(moment().subtract(10, 'days')) === true) {
       suggestion = printDetails(results[index], true);
