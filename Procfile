@@ -1,1 +1,1 @@
-web: node SwarmHistory.js
+web: node app.js
