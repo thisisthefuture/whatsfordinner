@@ -10,6 +10,7 @@ var User = new Schema({
   oauth_token: String,
   swarm_checkins_total: Number,
   checkin_update_needed: Boolean,
+  locations: Array,
   checkins: Array
 });
 

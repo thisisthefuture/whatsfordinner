@@ -9,10 +9,12 @@ var options = { upsert: true };
 // what the API returns...
 // if collection check_in === GET check_in, read from DB
 // if colleciton check_in < GET check_in
-// update db using getCheckins(token)
+// make GET request, then parse results raw using ./checkins
+// with what ./checkins returns (an array), update db
 // else... awkward...that our db have more check_in than Swarm
 
 exports.getPlaces = function (id, token, callback) {
+
     searchQuery.foursquare_id = id;
 
     User.find(searchQuery, function (err, user) {
@@ -32,7 +34,8 @@ exports.getPlaces = function (id, token, callback) {
             getCheckins(token, callback);
         } else {
             console.log('getting from database');
-            callback(user[0]._doc.checkins);
+            var checkins = { venues: user[0]._doc.checkins, locations: user[0]._doc.locations }
+            callback(checkins);
         }
     });
 };
@@ -86,7 +89,7 @@ function getCheckins(token, callback) {
     // Update database entry with checkins array
     function displayMyStuff(places) {
         placesToEat = require('./checkins').parse(places);
-        User.findOneAndUpdate(searchQuery, {checkin_update_needed: false, checkins: placesToEat}, options, function(err, user) {
+        User.findOneAndUpdate(searchQuery, {checkin_update_needed: false, checkins: placesToEat.venues, locations: placesToEat.locations}, options, function(err, user) {
             if(err) {
                 console.error(err);
             } else {

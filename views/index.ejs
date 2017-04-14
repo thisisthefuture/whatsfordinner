@@ -1,8 +1,14 @@
 <% if (!user) { %>
 	<h2>Welcome! Please <a href="/auth/foursquare">log in</a>.</h2>
 <% } else { %>
-	<h2>Hello, <%= user._doc.name %>!</h2>
+	Hello, <%= user._doc.name %>!
+
+	<p>
+		Recently you've been to <%- recent %>.
+	</p>
+
+	<p>
+		Let's try again <%- suggestion %>
+	</p>
 
 <% } %>
-
-<%- output %>

@@ -10,31 +10,29 @@ exports.parse = function (json) {
         json = JSON.parse(json);
     }
 
-// if the passed city is NOT in placesVisited add it.
-// function buildPlaceList(place) {
-//   if (placesVisited.find(function (element) {
-//     if (element === place.venue.location.city) {
-//       return element;
-//     }
-//   }) === undefined) {
-//     if (place.venue.location.city != undefined)
-//       placesVisited.push(place.venue.location.city);
-//     else {
-//       console.log('errr... undefined city with', place.venue.name);
-//     }
-//   }
-// }
-
     // get list of valid food/drinks related categories from Swarm
     var categories = require('./data/categories.js');
 
     var placesToEat = [];
-
-    // checkins.list = [];
-    // checkins.list[[0]] = json.response.checkins.items;
+    var citiesVisited = [];
 
     // an array to store the raw, unfiltered, data    
     var places = [];
+
+    // if the passed city is NOT in citiesVisited add it.
+    function buildPlaceList(place) {
+      if (citiesVisited.find(function (element) {
+        if (element === place.venue.location.city) {
+          return element;
+        }
+      }) === undefined) {
+        if (place.venue.location.city != undefined)
+          citiesVisited.push(place.venue.location.city);
+        else {
+          console.log('undefined city with', place.venue.name);
+        }
+      }
+    }
 
     // combining the multiple arrays of checkins into one
     // JSON data is blocked to sections of 250 entries
@@ -74,12 +72,16 @@ exports.parse = function (json) {
             }(places[i].venue.closed || false))
           ) {
 
-            // Find if place is already in placesToEat by venue name
-            // If not, let's add it and put visit count = 1. Otherwise, it exists so increment visit count.
-            // limitation: if I went to multiple places with the same name, they're counted as one place
+            // Find if place is already in placesToEat by venue.name + venue.location.address
+            // using the combo of the two to try and avoid consolidating multiple locations as one.
+            // addressing the Sizzle Pie / Starbucks Problem: 
+            // avoiding multiple visits to the same named business @ multiple locations being treated @ one place
             // e.g., Sizzle Pie in Portland (which I visited years ago and forgot about) vs. in Seattle
+
+            // If not, let's add it and put visit count = 1. Otherwise, it exists so increment visit count.
+
             var ele = placesToEat.find(function (element) {
-              if (element.details.venue.name === places[i].venue.name) {
+              if ((element.details.venue.name === places[i].venue.name) && (element.details.venue.location.address === places[i].venue.location.address)) {
                 return element;
               }
             });
@@ -91,11 +93,15 @@ exports.parse = function (json) {
                 count: 1
               });
 
-              // let's build our Places list, list of citys at the moment, while we're looping the array setting up
-              // buildPlaceList(places[i]);      
+              // let's build our locations list, list of citys at the moment, while we're looping the array setting up
+              buildPlaceList(places[i]);      
             }
             else {
+              // increment the visit count
+              // update the createdAt value to the most recent value
               ele.count++;
+              if (ele.details.createdAt <= places[i].details.createdAt)
+                ele.details.createdAt = places[i].details.createdAt;
             }
         }
       } else {
@@ -103,7 +109,7 @@ exports.parse = function (json) {
       }
 
     }
-    console.log('!!# of unique places to eat', placesToEat.length);
+    console.log('# of unique places to eat', placesToEat.length);
 
-    return placesToEat;
+    return { 'venues': placesToEat, 'locations': citiesVisited };
 };

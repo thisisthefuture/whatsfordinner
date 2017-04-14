@@ -7,6 +7,9 @@ app.set('view engine', 'ejs');
 var port = process.env.PORT || 8000;
 var server = require('http').Server(app);
 
+// for time math and display
+var moment = require("moment");
+
 // get list of valid food/drinks related categories from Swarm
 var categories = require('./data/categories.js');
 
@@ -36,95 +39,95 @@ server.listen(port, function() {
 });
 
 // Sets up the placesToEat array from the json file
-function setup() {
+// function setup() {
 
-  // read our static data
-  fs.readFile('./static_data/foursquare_checkins.json', 'utf8', function (err, data) {
-    if (err) throw err;
+//   // read our static data
+//   fs.readFile('./static_data/foursquare_checkins.json', 'utf8', function (err, data) {
+//     if (err) throw err;
 
-    // parse json to JS data structure
-    fromFile = JSON.parse(data);
+//     // parse json to JS data structure
+//     fromFile = JSON.parse(data);
 
-    // an array to store the raw, unfiltered, data    
-    var places = [];
+//     // an array to store the raw, unfiltered, data    
+//     var places = [];
 
-    // combining the multiple arrays of checkins into one
-    // JSON data is blocked to sections of 250 entries
-    for (var i = 0 ; i < fromFile.length; i++) {
-      places = places.concat(fromFile[i].response.checkins.items);
-    }
+//     // combining the multiple arrays of checkins into one
+//     // JSON data is blocked to sections of 250 entries
+//     for (var i = 0 ; i < fromFile.length; i++) {
+//       places = places.concat(fromFile[i].response.checkins.items);
+//     }
 
-    // response format: fromFile[ ].response.checkins.items.venue.categories[ ].name
-    // new shorter format: places[ ].venue.categories[ ].name
-    // console.log(places[0].venue.categories[0].name);
+//     // response format: fromFile[ ].response.checkins.items.venue.categories[ ].name
+//     // new shorter format: places[ ].venue.categories[ ].name
+//     // console.log(places[0].venue.categories[0].name);
 
-    console.log('# of places in log', places.length);
+//     console.log('# of places in log', places.length);
 
-    // Lets loop and clean up the data we received.
-    // We'll only use only places in the JSON that have 
-    // 1. a venue property, 
-    // 2. a category & a valid category, 
-    // 3. is not closed, and 
-    // let's have our list be of unique places, keeping track of multiple known visits
-    for (var i = 0; i < places.length; i++) {
+//     // Lets loop and clean up the data we received.
+//     // We'll only use only places in the JSON that have 
+//     // 1. a venue property, 
+//     // 2. a category & a valid category, 
+//     // 3. is not closed, and 
+//     // let's have our list be of unique places, keeping track of multiple known visits
+//     for (var i = 0; i < places.length; i++) {
 
-      // If no venue, it's not a real place we care about
-      if (places[i].hasOwnProperty('venue')) {
+//       // If no venue, it's not a real place we care about
+//       if (places[i].hasOwnProperty('venue')) {
 
-        // check that 1. the venue.categories is in the list of valid categories before we do anything else
-        //            2. the venue is not marked closed
+//         // check that 1. the venue.categories is in the list of valid categories before we do anything else
+//         //            2. the venue is not marked closed
 
-        // How this IF statement works:
-        // The IF condition is the && of two function's boolean outputs.
+//         // How this IF statement works:
+//         // The IF condition is the && of two function's boolean outputs.
       
-        // Function #1: What gets passed to the function is the venue 
-        // category if it exists. Otherwise 'none' is passed.
-        // This function returns is a bool, the output of whether the master categories list has the provided
-        // function name.
+//         // Function #1: What gets passed to the function is the venue 
+//         // category if it exists. Otherwise 'none' is passed.
+//         // This function returns is a bool, the output of whether the master categories list has the provided
+//         // function name.
 
-        // Function #2: What gets passed to this function is the boolean "closed" value for the venue if it exists.
-        // otherwise, false is passed to the function. This function simply returns what it is passed.
+//         // Function #2: What gets passed to this function is the boolean "closed" value for the venue if it exists.
+//         // otherwise, false is passed to the function. This function simply returns what it is passed.
 
-        // Why this silly work? Because if we wanted to evaluate the places[i].venue.closed and
-        // places[i].venue.categories[0] properties directly, if they didn't exist, a error
-        // would be thrown.
-        if ((function(category) {
-            return categories.hasOwnProperty(category.name);
-          }(places[i].venue.categories[0] || 'none')) && !(function(isClosed) {
-              return isClosed;
-            }(places[i].venue.closed || false))
-          ) {
+//         // Why this silly work? Because if we wanted to evaluate the places[i].venue.closed and
+//         // places[i].venue.categories[0] properties directly, if they didn't exist, a error
+//         // would be thrown.
+//         if ((function(category) {
+//             return categories.hasOwnProperty(category.name);
+//           }(places[i].venue.categories[0] || 'none')) && !(function(isClosed) {
+//               return isClosed;
+//             }(places[i].venue.closed || false))
+//           ) {
 
-            // Find if place is already in placesToEat.
-            // If not, let's add it and put visit count = 1. Otherwise, it exists so increment visit count.
-            var ele = placesToEat.find(function (element) {
-              if (element.details.venue.name === places[i].venue.name) {
-                return element;
-              }
-            });
+//             // Find if place is already in placesToEat.
+//             // If not, let's add it and put visit count = 1. Otherwise, it exists so increment visit count.
+//             var ele = placesToEat.find(function (element) {
+//               if (element.details.venue.name === places[i].venue.name) {
+//                 return element;
+//               }
+//             });
 
-            if (ele === undefined) {
-              placesToEat.push(
-              {
-                details: places[i],
-                count: 1
-              });
+//             if (ele === undefined) {
+//               placesToEat.push(
+//               {
+//                 details: places[i],
+//                 count: 1
+//               });
 
-              // let's build our Places list, list of citys at the moment, while we're looping the array setting up
-              buildPlaceList(places[i]);      
-            }
-            else {
-              ele.count++;
-            }
-        }
-      } else {
-        console.log('item', i, 'missing venue property');
-      }
-    }
-    console.log('# of unique places to eat', placesToEat.length);
+//               // let's build our Places list, list of citys at the moment, while we're looping the array setting up
+//               buildPlaceList(places[i]);      
+//             }
+//             else {
+//               ele.count++;
+//             }
+//         }
+//       } else {
+//         console.log('item', i, 'missing venue property');
+//       }
+//     }
+//     console.log('# of unique places to eat', placesToEat.length);
 
-  });
-}
+//   });
+// }
 
 // if the passed city is NOT in placesVisited add it.
 function buildPlaceList(place) {
@@ -195,30 +198,40 @@ app.get('/', function (req, res) {
   } else {
     console.log('No user yet');
     var summary = '';
-    res.render('index', { output: summary, user: req.user});
+    res.render('index', { recent: null, suggestion: null, user: req.user});
+
   }
 
   function getCheckins() {
-
     getCheckinsHelper();
   }
 
   function getCheckinsHelper() {
-     placesToEat.splice(0, placesToEat.length);
 
-    // placesToEat = require('./loadCheckins').getPlaces(req.user.id, req.user._doc.oauth_token);
+    // TODO: have logic to tell if an update is needed before we blow away the array and run through the
+    // rest of this method...
 
-    var summary = '';
     var loadCheckins = require('./loadCheckins');
-    loadCheckins.getPlaces(req.user._doc.foursquare_id, req.user._doc.oauth_token, function(places) {
-      summary = 'Recently visited:<br />' + printArrayOfPlaces(places);
-      res.render('index', { output: summary, user: req.user});
-    });
-    // summary = 'Recently visited:<br />' + printArrayOfPlaces(findPlaceByCity("Seattle"));
+
+    // crude check to avoid making calls to foursquare or the db
+    // TODO: make this check more practical to getting updates while a session is alive
+    if (placesToEat.length > 0) {
+      var recent = printRecent(placesToEat);
+      var suggestion = bubblingTheOlder(placesToEat);
+      res.render('index', { recent: recent, suggestion: suggestion, user: req.user});
+    } else {
+      loadCheckins.getPlaces(req.user._doc.foursquare_id, req.user._doc.oauth_token, function(places) {
+        placesToEat = places.venues;
+        placesVisited = places.locations;
+        var recent = printRecent(placesToEat);
+        var suggestion = bubblingTheOlder(placesToEat);
+        res.render('index', { recent: recent, suggestion: suggestion, user: req.user});
+      });
+    }
+    
+
     
   }
-
-  
 });
 
 app.get('/account', ensureAuthenticated, function(req, res){
@@ -226,48 +239,84 @@ app.get('/account', ensureAuthenticated, function(req, res){
 });
 
 app.get('/login', function(req, res){
-  var summary = '';
-  
-  // return the list of places in the provided City
-  var results = findPlaceByCity("Seattle");
-
-  // build the list to be displayed to the user
-  for (var i = 0; i < results.length; i++) {
-    summary += ('Eat at #' + i + ': ');
-    if (results[i].details.venue.hasOwnProperty('url')) {
-      summary += ('<a href="' + results[i].details.venue.url + '">' + results[i].details.venue.name + '</a>');
-    }
-    else {
-        summary += (results[i].details.venue.name);
-    }
-    summary += ('. Visited @ least ' + results[i].count +' times<br />');
-  }
-
-  res.render('login',  { output: summary, user: req.user });
+  res.render('login');
 });
 
-// var offset = 0;
-// var itemsRemain = true;
-// var data = [];
+// Takes an expected checkin object and returns a String summary
+function printDetails(ele, lastDate) {
+  var summary = '';
 
+  if (ele.details.venue.hasOwnProperty('url')) {
+    summary += ('<a href="' + ele.details.venue.url + '">' + ele.details.venue.name + '</a>');
+  }
+  else {
+    summary += (ele.details.venue.name);
+  }
+
+  if (lastDate) {
+    summary += ('. Last visited on ' + moment(ele.details.createdAt * 1000).format('LL') +'<br />');
+  }
+  else {
+    summary += ('. Visited @ least ' + ele.count +' times<br />');
+  }
+  return summary;
+}
+
+
+// Takes an array and returns a string to display the list of items
 function printArrayOfPlaces(list) {
   var summary = '';
 
   // build the list to be displayed to the user, including links if available.
   for (var i = 0; i < list.length; i++) {
     summary += ('Eat at #' + i + ': ');
-    if (list[i].details.venue.hasOwnProperty('url')) {
-      summary += ('<a href="' + list[i].details.venue.url + '">' + list[i].details.venue.name + '</a>');
-    }
-    else {
-        summary += (list[i].details.venue.name);
-    }
+    printDetails(list[i]);
     summary += ('. Visited @ least ' + list[i].count +' times<br />');
   }
 
   return summary;
 }
 
+// Takes a list and returns the summary of the first (most recent) item
+function printRecent(list) {
+
+  if (list.length === 0) {
+    return "Sorry, I don't know where you've been."
+  }
+  return printDetails(list[0]);
+ 
+}
+
+// Takes a list and suggest a place to eat
+// 1. in the same city as they currently are in
+// 2. that hasn't been visited in 10 days.
+// TODO: make these two factors adjustable
+function bubblingTheOlder(list) {
+
+  if (list.length === 0) {
+    return "Sorry, I don't know where you've been."
+  }
+
+  // give me places only in Seattle
+  var results = findPlaceByCity("Seattle");
+  var suggestion = '';
+  var index = 0;
+
+  // TODO: Fix this to handle if all check-ins are within the last 10 days...
+  while (suggestion === '') {
+    index = Math.floor(Math.random() * (results.length - 0));
+    console.log('attempt');
+    // if createdAt (last seen this check in) at least 10 days old
+    if (moment(results[index].details.createdAt * 1000).isBefore(moment().subtract(10, 'days')) === true) {
+      suggestion = printDetails(results[index], true);
+    }
+  }
+
+  return suggestion;
+
+}
+
+// what this route does now is redundant to the work that's done when a new user logs in
 app.get('/recent', ensureAuthenticated, function(req, res) {
   var checkinURL = 'https://api.foursquare.com/v2/users/self/checkins?limit=250&v=20131016&offset=';
 
@@ -321,7 +370,7 @@ app.get('/recent', ensureAuthenticated, function(req, res) {
       placesToEat.splice(0, placesToEat.length);
       placesToEat = require('./checkins').parse(places);
 
-      summary = 'Recently visited:<br />' + printArrayOfPlaces(placesToEat);
+      summary = 'Recently visited:<br />' + printArrayOfPlaces(placesToEat.venue);
       console.log(summary);
       res.send(summary);
   }
@@ -397,5 +446,3 @@ app.get('/city/:city', function (req, res) {
 });
 
 app.listen(5000);
-
-setup();
