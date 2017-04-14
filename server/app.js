@@ -4,7 +4,7 @@ var app = express();
 app.set('view engine', 'ejs');
 
 // configuring the port for our web server
-var port = process.env.PORT || 8000;
+var port = process.env.PORT || 5000;
 var server = require('http').Server(app);
 
 // for time math and display
@@ -439,4 +439,4 @@ app.get('/city/:city', function (req, res) {
 
 });
 
-app.listen(5000);
+// app.listen(port);
