@@ -1,11 +1,14 @@
 {
   "name": "whatsfordinner",
   "version": "1.0.0",
+  "engines": {
+    "node": "6.9.1"
+  },
   "description": "Full Name - the Sage & Alice What's for Dinner App. This app will remind us of what places we love to have dinner at.",
-  "main": "SwarmHistory.js",
+  "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node SwarmHistory.js"
+    "start": "node ./server/app.js"
   },
   "repository": {
     "type": "git",
