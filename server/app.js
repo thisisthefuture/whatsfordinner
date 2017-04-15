@@ -273,9 +273,7 @@ function printArrayOfPlaces(list) {
 
   // build the list to be displayed to the user, including links if available.
   for (var i = 0; i < list.length; i++) {
-    summary += ('Eat at #' + i + ': ');
-    printDetails(list[i]);
-    summary += ('. Visited @ least ' + list[i].count +' times<br />');
+    summary += printDetails(list[i]);
   }
 
   return summary;
@@ -395,7 +393,7 @@ app.get('/recent', ensureAuthenticated, function(req, res) {
 });
 
 // a route to display all places
-app.get('/all', function (req, res) {
+app.get('/all', ensureAuthenticated, function (req, res) {
   var summary = '';
 
   summary = printArrayOfPlaces(placesToEat);
@@ -404,7 +402,7 @@ app.get('/all', function (req, res) {
 });
 
 // handling the URL routing without a city search term
-app.get('/city', function (req, res) {
+app.get('/city', ensureAuthenticated, function (req, res) {
   var instructions = '';
 
   if (placesVisited.length === 0) {
@@ -420,7 +418,7 @@ app.get('/city', function (req, res) {
 });
 
 // specifying a route to do city queries
-app.get('/city/:city', function (req, res) {
+app.get('/city/:city', ensureAuthenticated, function (req, res) {
 
   var city = req.params.city;
   var summary = '';
@@ -439,5 +437,3 @@ app.get('/city/:city', function (req, res) {
   res.send(summary);
 
 });
-
-// app.listen(port);
