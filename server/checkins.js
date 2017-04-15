@@ -100,8 +100,8 @@ exports.parse = function (json) {
               // increment the visit count
               // update the createdAt value to the most recent value
               ele.count++;
-              if (ele.details.createdAt <= places[i].details.createdAt)
-                ele.details.createdAt = places[i].details.createdAt;
+              if (ele.details.createdAt <= places[i].createdAt)
+                ele.details.createdAt = places[i].createdAt;
             }
         }
       } else {

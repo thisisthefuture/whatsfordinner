@@ -275,7 +275,7 @@ function printArrayOfPlaces(list) {
 function printRecent(list) {
 
   if (list.length === 0) {
-    return "Sorry, I don't know where you've been."
+    return "...sorry, I don't know where you've been."
   }
   return printDetails(list[0]);
  
@@ -288,7 +288,7 @@ function printRecent(list) {
 function bubblingTheOlder(list) {
 
   if (list.length === 0) {
-    return "Sorry, I don't know where you've been."
+    return "...sorry, I don't know where you've been."
   }
 
   // give me places only in Seattle
@@ -378,8 +378,10 @@ app.get('/recent', ensureAuthenticated, function(req, res) {
   }
 
   // start our work
-  RetrievePlaces();
+  // RetrievePlaces();
 
+    var recent = printRecent(placesToEat);
+    res.send(recent); 
 });
 
 // a route to display all places
