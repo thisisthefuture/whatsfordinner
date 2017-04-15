@@ -247,6 +247,16 @@ function printDetails(ele, lastDate) {
     summary += (ele.details.venue.name);
   }
 
+  // can we get the neighborhood info from foursquare, e.g.,
+  // https://api.foursquare.com/v2/venues/search?client_secret=xxxx&client_id=cccc&limit=50&venuePhotos=1&v=20140327&near=Seattle,WA&radius=40000&categoryId=4f2a25ac4b909258e854f55f
+  // and then do a look up for the venu's neighbourhood
+
+  // if(ele.details.venue.location.hasOwnProperty('neighborhood')) {
+  //   summary += ' in ' + ele.details.venue.location.neighborhood;
+  // } else if (ele.details.venue.location.hasOwnProperty('address')) {
+  //   summary += ' on ' + ele.details.venue.location.address;
+  // }
+
   if (lastDate) {
     summary += ('. Last known visit on ' + moment(ele.details.createdAt * 1000).format('LL') +'<br />');
   }
@@ -388,17 +398,7 @@ app.get('/recent', ensureAuthenticated, function(req, res) {
 app.get('/all', function (req, res) {
   var summary = '';
 
-  // build the list to be displayed to the user
-  for (var i = 0; i < placesToEat.length; i++) {
-    summary += ('Eat at #' + i + ': ');
-    if (placesToEat[i].details.venue.hasOwnProperty('url')) {
-      summary += ('<a href="' + placesToEat[i].details.venue.url + '">' + placesToEat[i].details.venue.name + '</a>');
-    }
-    else {
-        summary += (placesToEat[i].details.venue.name);
-    }
-    summary += ('. Visited @ least ' + placesToEat[i].count +' times<br />');
-  }
+  summary = printArrayOfPlaces(placesToEat);
 
   res.send(summary);  
 });
@@ -434,16 +434,7 @@ app.get('/city/:city', function (req, res) {
   }
   
   // build the list to be displayed to the user
-  for (var i = 0; i < results.length; i++) {
-    summary += ('Eat at #' + i + ': ');
-    if (results[i].details.venue.hasOwnProperty('url')) {
-      summary += ('<a href="' + results[i].details.venue.url + '">' + results[i].details.venue.name + '</a>');
-    }
-    else {
-        summary += (results[i].details.venue.name);
-    }
-    summary += ('. Visited @ least ' + results[i].count +' times<br />');
-  }
+  summary = printArrayOfPlaces(results);
 
   res.send(summary);
 
