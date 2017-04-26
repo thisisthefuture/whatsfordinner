@@ -49,7 +49,7 @@ server.listen(port, function() {
     console.log("App is running on port " + port);
 });
 
-app.use(require('morgan')('dev')); 
+// app.use(require('morgan')('dev')); 
 app.set('view engine', 'ejs');
 app.use(require('cookie-parser')());
 app.use(session(
@@ -78,7 +78,7 @@ app.get('/auth/foursquare',
 //   login page.  Otherwise, the primary route function function will be called,
 //   which, in this example, will redirect the user to the home page.
 app.get('/auth/foursquare/callback', 
-  passportFoursquare.authenticate('foursquare', { failureRedirect: '/login', session: true }),
+  passportFoursquare.authenticate('foursquare', { failureRedirect: '/login' }),
   function(req, res) {
     console.log('authenticated');
     console.log('do we have a user? ', req.hasOwnProperty('user'));

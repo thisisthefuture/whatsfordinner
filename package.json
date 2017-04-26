@@ -4,7 +4,7 @@
   "engines": {
     "node": "6.9.1"
   },
-  "description": "Full Name - the Sage & Alice What's for Dinner App. This app will remind us of what places we love to have dinner at.",
+  "description": "The Sage & Alice What's for Dinner App. This app will remind us of what places we love to have dinner at.",
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
