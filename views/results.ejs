@@ -43,7 +43,6 @@
 			margin-bottom: 35px;
 			width: 100%;
 			line-height: 125%;
-			word-wrap: break-word;
 		}
 
 		.fa {
@@ -86,22 +85,11 @@
 	</header>
 	<body>
 		<div id="container">
-			<h1>What's for dinner?</h1>
-			<% if (!user) { %>
-				<h2>Welcome! Please <a href="/auth/foursquare">log in</a>.</h2>
-				
-			<% } else { %>
-				Hello, <%= user._doc.name %>!
+            <h1><%- title %>/</h1>
+            <p>
+                <%- results %>
+            </p>
 
-				<p>
-					Recently you've been to <%- recent %>
-				</p>
-
-				<p>
-					Let's try again <%- suggestion %>
-				</p>
-
-			<% } %>
 		</div>
 
 	</body>

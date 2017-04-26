@@ -16,7 +16,7 @@ var options = { upsert: true };
 
 exports.getPlaces = function (id, token, callback) {
     searchQuery.foursquare_id = id;
-
+    console.log('finding a user');
     User.find(searchQuery, function (err, user) {
         if (err) return console.error(err);
 
@@ -56,6 +56,7 @@ function getCheckins(token, callback) {
         // passing our checkin URL with offset, token, and callback function to process
         // the result of our GET request
         passport._strategies.foursquare._oauth2.get(checkinURL + offset, token, function(err, body, res) {
+            console.log('calling GET request');
             var json;
                 
             if (err) {
@@ -74,7 +75,7 @@ function getCheckins(token, callback) {
             // if no results come back, that means we are done collecting the json responses
             // we can now convert the json response to a data structure we can use to get checkin info
             if (json.response.checkins.items == 0) {
-                displayMyStuff(places);
+                parseAndUpdate(places);
             } else {
                 // console.log(json);
 
@@ -87,7 +88,7 @@ function getCheckins(token, callback) {
     }
 
     // Update database entry with checkins array
-    function displayMyStuff(places) {
+    function parseAndUpdate(places) {
         placesToEat = require('./checkins').parse(places);
         User.findOneAndUpdate(searchQuery, {checkin_update_needed: false, checkins: placesToEat.venues, locations: placesToEat.locations}, options, function(err, user) {
             if(err) {

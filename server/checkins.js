@@ -6,6 +6,8 @@
  * @api private
  */
 exports.parse = function (json) {
+    console.log('parse checkings!');
+
     if ('string' == typeof json) {
         json = JSON.parse(json);
     }
