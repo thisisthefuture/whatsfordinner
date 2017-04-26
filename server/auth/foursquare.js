@@ -28,7 +28,8 @@ passport.use(new FoursquareStrategy({
 
             // setting upsert = true creates the object if it doesn't exist. defaults to false.
             var options = {
-                upsert: true
+                upsert: true,
+                new: true
             }
             
             // check if foursquare_id exists in database, if so, return known user
