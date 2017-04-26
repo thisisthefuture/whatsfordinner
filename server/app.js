@@ -192,12 +192,9 @@ function printDetails(ele, lastDate) {
 
 // Takes an array list and returns a string to display the list of items
 function printArrayOfPlaces(list) {
-  var summary = '';
-
-  // build the list to be displayed to the user, including links if available.
-  for (var i = 0; i < list.length; i++) {
-    summary += printDetails(list[i]);
-  }
+ 
+  // build the list to be displayed to the user, using printDetails helper function
+  let summary = list.reduce((msg, item) => msg + printDetails(item), '');
 
   return summary;
 }
@@ -280,9 +277,7 @@ function getCitiesList() {
     cities = 'Whoops, no cities for some reason...';
   }
 
-  for (let i = 0 ; i < placesVisited.length; i++) {
-    cities += ('<a href="/city/' + placesVisited[i] + '">' + placesVisited[i] + '</a>  ');
-  }
+  cities = placesVisited.reduce((msg, item) => msg + '<a href="/city/' + item + '">' + item + '</a>  ', '')
 
   return cities;
 }

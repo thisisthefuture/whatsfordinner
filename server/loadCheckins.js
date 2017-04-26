@@ -75,7 +75,7 @@ function getCheckins(token, callback) {
             // if no results come back, that means we are done collecting the json responses
             // we can now convert the json response to a data structure we can use to get checkin info
             if (json.response.checkins.items == 0) {
-                parseAndUpdate(places);
+                parseAndUpdate(places, json.response.checkins.count);
             } else {
                 // console.log(json);
 
@@ -88,9 +88,9 @@ function getCheckins(token, callback) {
     }
 
     // Update database entry with checkins array
-    function parseAndUpdate(places) {
+    function parseAndUpdate(places, totalSwarmCheckins) {
         placesToEat = require('./checkins').parse(places);
-        User.findOneAndUpdate(searchQuery, {checkin_update_needed: false, checkins: placesToEat.venues, locations: placesToEat.locations}, options, function(err, user) {
+        User.findOneAndUpdate(searchQuery, {swarm_checkins_total: totalSwarmCheckins, checkin_update_needed: false, checkins: placesToEat.venues, locations: placesToEat.locations}, options, function(err, user) {
             if(err) {
                 console.error(err);
             } else {

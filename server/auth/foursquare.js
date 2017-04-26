@@ -52,7 +52,7 @@ passport.use(new FoursquareStrategy({
                             console.log('Need to update our checkins... Update DB with flag that update needed, and the new count');
                             var updates = {
                                 checkin_update_needed: true,
-                                swarm_checkins_total: profile._json.response.user.checkins.count
+                                swarm_checkins_total: 0
                             }
                             User.findOneAndUpdate(searchQuery, updates, options, function (err, user) {
                                 if (err) { console.error(err); }
