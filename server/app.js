@@ -178,7 +178,7 @@ function printDetails(ele, lastDate) {
   // }
 
   if (lastDate) {
-    summary += ('. Last known visit on ' + moment(ele.details.createdAt * 1000).format('LL') +'<br />');
+    summary += ('.<br />Last known visit on ' + moment(ele.details.createdAt * 1000).format('LL') +'<br />');
   }
   else {
     if (ele.count === 1) {
@@ -274,20 +274,24 @@ app.get('/all', ensureAuthenticated, function (req, res) {
 
 });
 
+function getCitiesList() {
+  let cities = '';
+  if (placesVisited.length === 0) {
+    cities = 'Whoops, no cities for some reason...';
+  }
+
+  for (let i = 0 ; i < placesVisited.length; i++) {
+    cities += ('<a href="/city/' + placesVisited[i] + '">' + placesVisited[i] + '</a>  ');
+  }
+
+  return cities;
+}
+
 // handling the URL routing without a city search term
 app.get('/city', ensureAuthenticated, function (req, res) {
-  var instructions = '';
 
   getCheckins(req, function () {
-    if (placesVisited.length === 0) {
-        instructions = 'Whoops, no cities for some reason...';
-      }
-
-      for (var i = 0 ; i < placesVisited.length; i++) {
-        instructions += ('<a href="/city/' + placesVisited[i] + '">' + placesVisited[i] + '</a>&nbsp;&nbsp;');
-      }
-    
-      res.render('results', { title: 'city/', results: instructions});
+    res.render('results', { title: 'city', results: getCitiesList()});
   });  
 });
 
