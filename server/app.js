@@ -49,6 +49,7 @@ server.listen(port, function() {
     console.log("App is running on port " + port);
 });
 
+app.use(require('morgan')('dev')); 
 app.set('view engine', 'ejs');
 app.use(require('cookie-parser')());
 app.use(session(
@@ -56,7 +57,7 @@ app.use(session(
     cookie: {
       maxAge: 1000 * 60 * 60 * 24 * 7 // 1 week 
     },
-    // store: store,
+    store: store,
     resave: true, 
     saveUninitialized: true}));
 
@@ -77,11 +78,12 @@ app.get('/auth/foursquare',
 //   login page.  Otherwise, the primary route function function will be called,
 //   which, in this example, will redirect the user to the home page.
 app.get('/auth/foursquare/callback', 
-  passportFoursquare.authenticate('foursquare', { failureRedirect: '/login' }),
+  passportFoursquare.authenticate('foursquare', { failureRedirect: '/login', session: true }),
   function(req, res) {
     console.log('authenticated');
     console.log('do we have a user? ', req.hasOwnProperty('user'));
     // res.json(req.user);
+    user = req.user;
     res.redirect('/');
   });
 
@@ -95,12 +97,17 @@ function ensureAuthenticated(req, res, next) {
   res.redirect('/login')
 }
 
+var user;
+
 // The results to be shown when a user navigates to the root route
 app.get('/', function (req, res) {
-  if (req.user) {
-    console.log('User exists! Their name is', req.user._doc.name);
-    console.log('token', req.user._doc.oauth_token);
-    getCheckins(req, function (recent, suggestion, user) {
+  if (user) {
+    console.log('at / user = ', user)
+    console.log('User exists! Their name is', user.name);
+    console.log('token', user.oauth_token);
+    getCheckins(user, function (recent, suggestion) {
+      req.user = req.user || user
+      console.log('req.user = ', req.user);
       res.render('index', { recent: recent, suggestion: suggestion, user: req.user});
     });
   } else {
@@ -134,7 +141,7 @@ function getCheckinsHelper(req, cb) {
   } else {
     console.log('we need to load checkins');
     var loadCheckins = require('./loadCheckins');
-    loadCheckins.getPlaces(req.user._doc.foursquare_id, req.user._doc.oauth_token, function(places) {
+    loadCheckins.getPlaces(user.foursquare_id, user.oauth_token, function(places) {
       placesToEat = places.venues;
       placesVisited = places.locations;
       var recent = printRecent(placesToEat);

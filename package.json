@@ -30,5 +30,8 @@
     "mongoose": "^4.9.4",
     "passport": "^0.3.2",
     "passport-foursquare": "^1.0.0"
+  },
+  "devDependencies": {
+    "morgan": "1.8.1"
   }
 }
