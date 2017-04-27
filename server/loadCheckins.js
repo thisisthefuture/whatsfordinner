@@ -74,7 +74,7 @@ function getCheckins(token, callback) {
         
             // if no results come back, that means we are done collecting the json responses
             // we can now convert the json response to a data structure we can use to get checkin info
-            if (json.response.checkins.items == 0) {
+            if (json.response.checkins.items === 0) {
                 parseAndUpdate(places, json.response.checkins.count);
             } else {
                 // console.log(json);

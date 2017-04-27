@@ -27,7 +27,7 @@ passport.use(new FoursquareStrategy({
             };
 
             // setting upsert = true creates the object if it doesn't exist. defaults to false.
-            var options = {
+            let options = {
                 upsert: true,
                 new: true
             }
@@ -51,7 +51,7 @@ passport.use(new FoursquareStrategy({
                         }
                         else if (user._doc.swarm_checkins_total === undefined || user._doc.swarm_checkins_total < profile._json.response.user.checkins.count) {
                             console.log('Need to update our checkins... Update DB with flag that update needed, and the new count');
-                            var updates = {
+                            let updates = {
                                 checkin_update_needed: true,
                                 swarm_checkins_total: 0
                             }

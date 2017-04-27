@@ -83,8 +83,15 @@ app.get('/auth/foursquare/callback',
     console.log('authenticated');
     console.log('do we have a user? ', req.hasOwnProperty('user'));
     // res.json(req.user);
-    user = req.user;
-    res.redirect('/');
+    req.session.user = req.user._doc
+    req.session.blah = 2;
+    req.session.save(err => {
+      if (err)
+        console.error(err)
+      console.log('auth: req.session.user', req.session.hasOwnProperty('user'));
+      res.redirect('/');
+    })
+    
   });
 
 // Simple route middleware to ensure user is authenticated.
@@ -97,17 +104,21 @@ function ensureAuthenticated(req, res, next) {
   res.redirect('/login')
 }
 
-var user;
-
 // The results to be shown when a user navigates to the root route
 app.get('/', function (req, res) {
+  
+  let user = req.session.user || undefined;
+  console.log('req.session.blah', req.session.blah)
+  console.log('req.session', req.hasOwnProperty('session'));
+  console.log('req.session.user', req.session.hasOwnProperty('user'));
+  console.log('req.user', req.hasOwnProperty('user'));
+
   if (user) {
-    console.log('at / user = ', user)
     console.log('User exists! Their name is', user.name);
     console.log('token', user.oauth_token);
     getCheckins(user, function (recent, suggestion) {
       req.user = req.user || user
-      console.log('req.user = ', req.user);
+      console.log('req.user = ', req.hasOwnProperty('user'));
       res.render('index', { recent: recent, suggestion: suggestion, user: req.user});
     });
   } else {
@@ -141,7 +152,7 @@ function getCheckinsHelper(req, cb) {
   } else {
     console.log('we need to load checkins');
     var loadCheckins = require('./loadCheckins');
-    loadCheckins.getPlaces(user.foursquare_id, user.oauth_token, function(places) {
+    loadCheckins.getPlaces(req.foursquare_id, req.oauth_token, function(places) {
       placesToEat = places.venues;
       placesVisited = places.locations;
       var recent = printRecent(placesToEat);
