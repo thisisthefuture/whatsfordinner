@@ -13,8 +13,6 @@ passport.use(new FoursquareStrategy({
         // after the stack is clear
         // Q: not sure if this code has any effect vs. the cb in User.findOneAndUpdate...
         process.nextTick(function () {
-            console.log('accessToken = ', accessToken);
-
             var searchQuery = {
                 foursquare_id: profile.id
             };
@@ -26,7 +24,8 @@ passport.use(new FoursquareStrategy({
                 oauth_token: accessToken
             };
 
-            // setting upsert = true creates the object if it doesn't exist. defaults to false.
+            // upsert = true to create the object if it doesn't exist. Defaults to false.
+            // new = true so the updated modifyed document is returned. Defaults to false.
             let options = {
                 upsert: true,
                 new: true
@@ -38,32 +37,26 @@ passport.use(new FoursquareStrategy({
                     return done(err);
                 } else {
                     if (user) {
-                        console.log('foursquare.js / got a user!');
                         if (user._doc.swarm_checkins_total === profile._json.response.user.checkins.count) {
-                            console.log('checkin total in sync. Update DB that no checkin update needed. Not urgent work');
-                            var updates = {
-                                checkin_update_needed: false
-                            }
-                            User.findOneAndUpdate(searchQuery, updates, options, function (err, user) {
+                            console.log('Checkin totals in sync. Update DB that no checkin update needed.');
+                            User.findOneAndUpdate(searchQuery, {checkin_update_needed: false}, options, function (err, user) {
                                 if (err) { console.error(err); }
-                                console.log('setting updates = false');
                             });
                         }
                         else if (user._doc.swarm_checkins_total === undefined || user._doc.swarm_checkins_total < profile._json.response.user.checkins.count) {
-                            console.log('Need to update our checkins... Update DB with flag that update needed, and the new count');
+                            console.log('Need to update our checkins. Update DB with flag that update needed.');
                             let updates = {
-                                checkin_update_needed: true,
-                                swarm_checkins_total: 0
+                                checkin_update_needed: true
                             }
                             User.findOneAndUpdate(searchQuery, updates, options, function (err, user) {
                                 if (err) { console.error(err); }
-                                console.log('setting updates = true');
                             });
                         } else {
-                            console.error('can\t compare checkins total with latest from profile.')
+                            console.error('can\'t compare checkins total with latest from profile.')
                         }
-                        console.log('finishing up in foursquare.js.');
                         return done(null, user);
+                    } else {
+                        console.error('Mongoose didn\'t return a user. This shouldn\'t happen if options.upsert = true')
                     }
                     // is the total of known check ins (in the db) < what we're seeing from the latest service call?
                     // if yes, set the flag that checkins need to be updated to true; else false

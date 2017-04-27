@@ -51,9 +51,9 @@ server.listen(port, function() {
 
 // app.use(require('morgan')('dev')); 
 app.set('view engine', 'ejs');
-app.use(require('cookie-parser')());
+app.use(require('cookie-parser')(process.env.COOKIE_SECRET));
 app.use(session(
-  { secret: 'keyboard cat', 
+  { secret: process.env.COOKIE_SECRET, 
     cookie: {
       maxAge: 1000 * 60 * 60 * 24 * 7 // 1 week 
     },
@@ -81,17 +81,14 @@ app.get('/auth/foursquare/callback',
   passportFoursquare.authenticate('foursquare', { failureRedirect: '/login' }),
   function(req, res) {
     console.log('authenticated');
-    console.log('do we have a user? ', req.hasOwnProperty('user'));
-    // res.json(req.user);
-    req.session.user = req.user._doc
-    req.session.blah = 2;
-    req.session.save(err => {
-      if (err)
-        console.error(err)
-      console.log('auth: req.session.user', req.session.hasOwnProperty('user'));
-      res.redirect('/');
-    })
+
+    placesToEat = req.session.passport.user.checkins || [];
+    locations = req.session.passport.user.locations || [];
     
+    req.session.save(err => {
+      if (err) console.error(err)
+      res.redirect(req.session.redirectTo || '/');
+    })
   });
 
 // Simple route middleware to ensure user is authenticated.
@@ -101,28 +98,30 @@ app.get('/auth/foursquare/callback',
 //   login page.
 function ensureAuthenticated(req, res, next) {
   if (req.isAuthenticated()) { return next(); }
-  res.redirect('/login')
+
+  // saving original URL so we can navigate back to it again after login
+  if (!req.session.redirectTo) {
+    req.session.redirectTo = req.originalUrl;
+  }
+  req.session.save(err => {
+    if (err) return next(err)
+    res.redirect('/login')
+  });
 }
 
 // The results to be shown when a user navigates to the root route
 app.get('/', function (req, res) {
   
-  let user = req.session.user || undefined;
-  console.log('req.session.blah', req.session.blah)
-  console.log('req.session', req.hasOwnProperty('session'));
-  console.log('req.session.user', req.session.hasOwnProperty('user'));
-  console.log('req.user', req.hasOwnProperty('user'));
+  console.log('req.session:\t', req.hasOwnProperty('session'));
+  console.log('req.user:\t', req.hasOwnProperty('user'));
 
-  if (user) {
-    console.log('User exists! Their name is', user.name);
-    console.log('token', user.oauth_token);
-    getCheckins(user, function (recent, suggestion) {
-      req.user = req.user || user
-      console.log('req.user = ', req.hasOwnProperty('user'));
+  if (req.user) {
+    console.log('User exists:\t', req.user.name);
+    getCheckins(req.user, function (recent, suggestion) {
       res.render('index', { recent: recent, suggestion: suggestion, user: req.user});
     });
   } else {
-    console.log('No user yet');
+    console.log('No user:\t :(');
     res.render('index', { recent: null, suggestion: null, user: req.user});
   }
 });
@@ -145,12 +144,12 @@ function getCheckinsHelper(req, cb) {
   // crude check to avoid making calls to foursquare or the db
   // TODO: make this check more practical to getting updates while a session is alive
   if (placesToEat.length > 0) {
-    console.log('we already have a list of places in memory');
+    console.log('getcheckinshelper:\n\t\t We already have a list of places in memory');
     var recent = printRecent(placesToEat);
     var suggestion = bubblingTheOlder(placesToEat);
     cb(recent, suggestion);
   } else {
-    console.log('we need to load checkins');
+    console.log('getcheckinshelper:\n\t\t We need to load checkins');
     var loadCheckins = require('./loadCheckins');
     loadCheckins.getPlaces(req.foursquare_id, req.oauth_token, function(places) {
       placesToEat = places.venues;
@@ -243,25 +242,36 @@ function bubblingTheOlder(list) {
   var index = 0;
 
   // TODO: Fix this to handle if all check-ins are within the last 10 days...
-  while (suggestion === '') {
-    index = Math.floor(Math.random() * (results.length - 0));
+  // assumption: list goes from most recently visited to least recently visited
+  // slightly better: check the last element available.
+  // if the last (oldest known) place isn't more than 10 days old, then nothing is.
+  // Give that place back for now. Ideally: suggest them a place in the area they haven't been but
+  // have lots of visits from the community
 
-    // to manually check how many tries we take to find a suggestion fitting the 10+ day threshold
-    // ideally should see this only once
-    // for people with only very new checkins: suggest something they haven't been to in the area
-    
-    console.log('attempt');
+  if (moment(results[results.length -1].details.createdAt * 1000).isBefore(moment().subtract(10, 'days')) !== true) {
+      suggestion = printDetails(results[results.length - 1], true);
+      console.log('oldest place it is.')
+  }
+  else {
+    // still can be looping here for awhile. OPPORTUNITY for optimization
+    while (suggestion === '') { // commenting out temporarily...
+      index = Math.floor(Math.random() * (results.length - 0));
 
-    // TODO: add logic to handle ambigious places (e.g., which Serious Pie have I been to recently?)
-    // ... e.g., in print out of details, mention its street + city
-    // if createdAt (last seen this check in) at least 10 days old
-    if (moment(results[index].details.createdAt * 1000).isBefore(moment().subtract(10, 'days')) === true) {
-      suggestion = printDetails(results[index], true);
-    }
+      // to manually check how many tries we take to find a suggestion fitting the 10+ day threshold
+      // ideally should see this only once      
+      console.log('attempt');
+
+      // TODO: add logic to handle ambigious places (e.g., which Serious Pie have I been to recently?)
+      // ... e.g., in print out of details, mention its street + city
+
+      // if createdAt (last seen this check in) at least 10 days old
+      if (moment(results[index].details.createdAt * 1000).isBefore(moment().subtract(10, 'days')) === true) {
+        suggestion = printDetails(results[index], true);
+      }
+    }  
   }
 
   return suggestion;
-
 }
 
 // shows only the recently visited place
@@ -284,9 +294,6 @@ app.get('/all', ensureAuthenticated, function (req, res) {
     
     res.render('results', { title: 'all', results: summary});
   });
-
-  // res.send(summary);  
-
 });
 
 function getCitiesList() {

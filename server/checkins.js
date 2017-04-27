@@ -6,7 +6,7 @@
  * @api private
  */
 exports.parse = function (json) {
-    console.log('parse checkings!');
+    console.log('parse checkings');
 
     if ('string' == typeof json) {
         json = JSON.parse(json);
@@ -88,7 +88,7 @@ exports.parse = function (json) {
         }
         return uniques
       }, [])
-    console.log('# of unique places to eat', placesToEat.length);
+    console.log('unique places to eat #:', placesToEat.length);
 
     return { 'venues': placesToEat, 'locations': citiesVisited };
 };

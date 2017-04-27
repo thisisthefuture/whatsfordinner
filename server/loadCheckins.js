@@ -23,14 +23,16 @@ exports.getPlaces = function (id, token, callback) {
         if (user.length > 1) {
             return console.error('why did we find multiple users with the same id');
         } else if (user.length === 0) {
-            return console.error('didn\'t find a user with id = ', id);
+            // this should never happen if we're looking at the right id
+            // in foursquare.js we do User.findOneAndUpdate with upsert = true so
+            // an new user gets added to the db, if they don't already exist
+            return console.error('Unexpected:\tdidn\'t find a user with id = ', id);
         }
 
         if (user[0]._doc.checkin_update_needed) {
             console.log('getting from Swarm');
 
             // gets the whole list of checkins again.
-            // should only add the most N recent....
             getCheckins(token, callback);
         } else {
             console.log('getting from database');
@@ -56,7 +58,7 @@ function getCheckins(token, callback) {
         // passing our checkin URL with offset, token, and callback function to process
         // the result of our GET request
         passport._strategies.foursquare._oauth2.get(checkinURL + offset, token, function(err, body, res) {
-            console.log('calling GET request', ++count);
+            console.log('GET request\t', ++count);
             var json;
                 
             if (err) {
@@ -69,7 +71,8 @@ function getCheckins(token, callback) {
             try {
                     json = JSON.parse(body);
                 } catch (ex) {
-                    return done(new Error('Failed to get checkins'));
+                    console.error('Failed to get checkins')
+                    // return done(new Error('Failed to get checkins'));
                 }
         
             // if no results come back, that means we are done collecting the json responses
@@ -77,8 +80,6 @@ function getCheckins(token, callback) {
             if (json.response.checkins.items.length === 0) {
                 parseAndUpdate(places, json.response.checkins.count);
             } else {
-                // console.log(json);
-
                 // got more items to process, so let's increase our offset
                 // and call RetrievePlacesHelper again, with our new offset, and what we've
                 // got from the server so far (and have stored handily in places[])
