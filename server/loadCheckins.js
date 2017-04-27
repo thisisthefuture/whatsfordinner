@@ -42,7 +42,7 @@ exports.getPlaces = function (id, token, callback) {
 
 function getCheckins(token, callback) {
     var checkinURL = 'https://api.foursquare.com/v2/users/self/checkins?limit=250&v=20131016&offset=';
-
+    let count = 0;
     // defining our RetrievePlaces method to kick-off our recurrsion RetrievePlacesHelper()
     function RetrievePlaces() {
 
@@ -56,7 +56,7 @@ function getCheckins(token, callback) {
         // passing our checkin URL with offset, token, and callback function to process
         // the result of our GET request
         passport._strategies.foursquare._oauth2.get(checkinURL + offset, token, function(err, body, res) {
-            console.log('calling GET request');
+            console.log('calling GET request', ++count);
             var json;
                 
             if (err) {
@@ -69,12 +69,12 @@ function getCheckins(token, callback) {
             try {
                     json = JSON.parse(body);
                 } catch (ex) {
-                    // return done(new Error('Failed to get checkins'));
+                    return done(new Error('Failed to get checkins'));
                 }
         
             // if no results come back, that means we are done collecting the json responses
             // we can now convert the json response to a data structure we can use to get checkin info
-            if (json.response.checkins.items === 0) {
+            if (json.response.checkins.items.length === 0) {
                 parseAndUpdate(places, json.response.checkins.count);
             } else {
                 // console.log(json);
