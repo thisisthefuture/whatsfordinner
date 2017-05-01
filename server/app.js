@@ -82,8 +82,8 @@ app.get('/auth/foursquare/callback',
   function(req, res) {
     console.log('authenticated');
 
-    placesToEat = req.session.passport.user.checkins || [];
-    locations = req.session.passport.user.locations || [];
+    // placesToEat = req.session.passport.user.checkins || [];
+    // locations = req.session.passport.user.locations || [];
     
     req.session.save(err => {
       if (err) console.error(err)
@@ -302,7 +302,7 @@ function getCitiesList() {
   } else {
     cities = placesVisited.reduce((msg, item) => msg + '<a href="/city/' + item + '">' + item + '</a>  ', '')
   }
-  
+
   return cities;
 }
 
