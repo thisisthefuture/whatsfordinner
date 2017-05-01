@@ -24,7 +24,7 @@ var placesVisited = [];
 
 // Filter results by City
 function findPlaceByCity(query) {
-  return placesToEat.filter(function(el) {
+  return placesToEat.filter(function (el) {
     if (query === el.details.venue.location.city) {
       return el;
     }
@@ -37,29 +37,32 @@ mongoose.connect(process.env.MONGOOSE_URL);
 
 var passport = require('passport');
 var passportFoursquare = require('./auth/foursquare');
-var store = new MongoDBStore(
-  { uri: process.env.MONGOOSE_URL, collection: 'sessions' });
+var store = new MongoDBStore({
+  uri: process.env.MONGOOSE_URL,
+  collection: 'sessions'
+});
 
-store.on('error', function(error) {
+store.on('error', function (error) {
   console.error(error);
 });
 
 // start up our webapp
-server.listen(port, function() {
-    console.log("App is running on port " + port);
+server.listen(port, function () {
+  console.log("App is running on port " + port);
 });
 
 // app.use(require('morgan')('dev')); 
 app.set('view engine', 'ejs');
 app.use(require('cookie-parser')(process.env.COOKIE_SECRET));
-app.use(session(
-  { secret: process.env.COOKIE_SECRET, 
-    cookie: {
-      maxAge: 1000 * 60 * 60 * 24 * 7 // 1 week 
-    },
-    store: store,
-    resave: true, 
-    saveUninitialized: true}));
+app.use(session({
+  secret: process.env.COOKIE_SECRET,
+  cookie: {
+    maxAge: 1000 * 60 * 60 * 24 * 7 // 1 week 
+  },
+  store: store,
+  resave: true,
+  saveUninitialized: true
+}));
 
 app.use(passport.initialize());
 app.use(passport.session());
@@ -77,13 +80,15 @@ app.get('/auth/foursquare',
 //   request.  If authentication fails, the user will be redirected back to the
 //   login page.  Otherwise, the primary route function function will be called,
 //   which, in this example, will redirect the user to the home page.
-app.get('/auth/foursquare/callback', 
-  passportFoursquare.authenticate('foursquare', { failureRedirect: '/login' }),
-  function(req, res) {
+app.get('/auth/foursquare/callback',
+  passportFoursquare.authenticate('foursquare', {
+    failureRedirect: '/login'
+  }),
+  function (req, res) {
     console.log('authenticated');
 
     placesToEat = [];
-    locations = []; 
+    locations = [];
 
     req.session.save(err => {
       if (err) console.error(err)
@@ -97,11 +102,13 @@ app.get('/auth/foursquare/callback',
 //   the request will proceed.  Otherwise, the user will be redirected to the
 //   login page.
 function ensureAuthenticated(req, res, next) {
-  if (req.isAuthenticated()) { return next(); }
+  if (req.isAuthenticated()) {
+    return next();
+  }
 
   // saving original URL so we can navigate back to it again after login
   if (!req.session.redirectTo) req.session.redirectTo = req.originalUrl;
-  
+
   req.session.save(err => {
     if (err) return next(err)
     res.redirect('/login')
@@ -110,7 +117,7 @@ function ensureAuthenticated(req, res, next) {
 
 // The results to be shown when a user navigates to the root route
 app.get('/', function (req, res) {
-  
+
   console.log('req.session:\t', req.hasOwnProperty('session'));
   console.log('req.user:\t', req.hasOwnProperty('user'));
 
@@ -118,19 +125,28 @@ app.get('/', function (req, res) {
     console.log('User exists:\t', req.user.name);
 
     getCheckins(req.user, function (recent, suggestion) {
-      res.render('index', { recent: recent, suggestion: suggestion, user: req.user});
+      res.render('index', {
+        suggestion: suggestion,
+        user: req.user
+      });
     });
   } else {
     console.log('No user:\t :(');
-    res.render('index', { recent: null, suggestion: null, user: req.user});
+    res.render('index', {
+      recent: null,
+      suggestion: null,
+      user: req.user
+    });
   }
 });
 
-app.get('/account', ensureAuthenticated, function(req, res){
-  res.render('account', { user: req.user });
+app.get('/account', ensureAuthenticated, function (req, res) {
+  res.render('account', {
+    user: req.user
+  });
 });
 
-app.get('/login', function(req, res){
+app.get('/login', function (req, res) {
   res.render('login');
 });
 
@@ -149,15 +165,15 @@ function getCheckinsHelper(req, cb) {
   //   var suggestion = bubblingTheOlder(placesToEat);
   //   cb(recent, suggestion);
   // } else {
-    console.log('getcheckinshelper:\n\t\t We need to load checkins');
-    require('./loadCheckins').getPlaces(req.foursquare_id, req.oauth_token, function(places) {
-      placesToEat = places.venues;
-      placesVisited = places.locations;
-      var recent = printRecent(placesToEat);
-      var suggestion = bubblingTheOlder(placesToEat);
-      cb(recent, suggestion);
-    });
-  }    
+  console.log('getcheckinshelper:\n\t\t We need to load checkins');
+  require('./loadCheckins').getPlaces(req.foursquare_id, req.oauth_token, function (places) {
+    placesToEat = places.venues;
+    placesVisited = places.locations;
+    var recent = printRecent(placesToEat);
+    var suggestion = bubblingTheOlder(placesToEat);
+    cb(recent, suggestion);
+  });
+}
 
 
 // Takes an expected checkin object ele and returns a String summary containing
@@ -169,8 +185,7 @@ function printDetails(ele, lastDate) {
 
   if (ele.details.venue.hasOwnProperty('url')) {
     summary += ('<a href="' + ele.details.venue.url + '">' + ele.details.venue.name + '</a>');
-  }
-  else {
+  } else {
     summary += (ele.details.venue.name);
   }
 
@@ -187,31 +202,28 @@ function printDetails(ele, lastDate) {
   */
   // most places from foursquare don't have this field yet. Need to look into twofishes
   // to populate this field. Sigh.
-  if(ele.details.venue.location.hasOwnProperty('neighborhood')) 
+  if (ele.details.venue.location.hasOwnProperty('neighborhood'))
     summary += ' in ' + ele.details.venue.location.neighborhood;
   // } else if (ele.details.venue.location.hasOwnProperty('address')) {
   //   summary += ' on ' + ele.details.venue.location.address;
   // }
 
   if (lastDate) {
-    summary += ('.<br />Last known visit on ' + moment(ele.details.createdAt * 1000).format('LL') +'<br />');
-  }
-  else {
+    summary += ('.<br />Last known visit on ' + moment(ele.details.createdAt * 1000).format('LL') + '<br />');
+  } else {
     if (ele.count === 1) {
       summary += ('. Visited @ least once<br />');
     } else
-      summary += ('. Visited @ least ' + ele.count +' times<br />');
+      summary += ('. Visited @ least ' + ele.count + ' times<br />');
   }
   return summary;
 }
 
 
-// Takes an array list and returns a string to display the list of items
+// Build the list to be displayed to the user, using printDetails helper function
 function printArrayOfPlaces(list) {
- 
-  // build the list to be displayed to the user, using printDetails helper function
-  let summary = list.reduce((msg, item) => msg + printDetails(item), '');
 
+  let summary = list.reduce((msg, item) => msg + printDetails(item), '');
   return summary;
 }
 
@@ -222,7 +234,7 @@ function printRecent(list) {
     return "...sorry, I don't know where you've been."
   }
   return printDetails(list[0]);
- 
+
 }
 
 // Takes a list and suggest a place to eat
@@ -247,13 +259,12 @@ function bubblingTheOlder(list) {
   // Give that place back for now. Ideally: suggest them a place in the area they haven't been but
   // have lots of visits from the community
 
-  if (moment(results[results.length -1].details.createdAt * 1000).isBefore(moment().subtract(10, 'days')) !== true) {
-      suggestion = printDetails(results[results.length - 1], true);
-      console.log('oldest place it is.')
-  }
-  else {
+  if (moment(results[results.length - 1].details.createdAt * 1000).isBefore(moment().subtract(10, 'days')) !== true) {
+    suggestion = printDetails(results[results.length - 1], true);
+    console.log('oldest place it is.')
+  } else {
     // still can be looping here for awhile. OPPORTUNITY for optimization
-    while (suggestion === '') { // commenting out temporarily...
+    while (suggestion === '') {
       index = Math.floor(Math.random() * (results.length - 0));
 
       // to manually check how many tries we take to find a suggestion fitting the 10+ day threshold
@@ -267,31 +278,38 @@ function bubblingTheOlder(list) {
       if (moment(results[index].details.createdAt * 1000).isBefore(moment().subtract(10, 'days')) === true) {
         suggestion = printDetails(results[index], true);
       }
-    }  
+    }
   }
 
   return suggestion;
 }
 
 // shows only the recently visited place
-app.get('/recent', ensureAuthenticated, function(req, res) {
-  
-    var recent = printRecent(placesToEat);
-    res.send(recent); 
+app.get('/recent', ensureAuthenticated, function (req, res) {
+  console.log('recently visited')
+  res.render('results', {
+    title: 'all',
+    results: printRecent(placesToEat)
+  });
 });
 
 // a route to display all places
 app.get('/all', ensureAuthenticated, function (req, res) {
-  var summary = '';
+  let summary = '';
+  console.log('showing all food related checkins')
 
   getCheckins(req.user, function () {
     if (placesToEat.length === 0) {
-      console.error('why are there no places to eat...');
+      summary = 'why are there no places to eat...'
+      console.error(summary);
+    } else {
+      summary = printArrayOfPlaces(placesToEat);
     }
 
-    summary = printArrayOfPlaces(placesToEat);
-    
-    res.render('results', { title: 'all', results: summary});
+    res.render('results', {
+      title: 'all',
+      results: summary
+    });
   });
 });
 
@@ -308,10 +326,11 @@ function getCitiesList() {
 
 // handling the URL routing without a city search term
 app.get('/city', ensureAuthenticated, function (req, res) {
-
-  getCheckins(req.user, function () {
-    res.render('results', { title: 'city', results: getCitiesList()});
-  });  
+  console.log("list of cities visited")
+  res.render('results', {
+    title: 'city',
+    results: getCitiesList()
+  });
 });
 
 // specifying a route to do city queries
@@ -327,10 +346,13 @@ app.get('/city/:city', ensureAuthenticated, function (req, res) {
 
     if (results.length === 0) {
       summary = 'Can\'t find any places in ' + city;
+    } else {
+      summary = printArrayOfPlaces(results);
     }
 
-    summary = printArrayOfPlaces(results);
-
-    res.render('results', { title: city, results: summary});
+    res.render('results', {
+      title: city,
+      results: summary
+    });
   });
 });

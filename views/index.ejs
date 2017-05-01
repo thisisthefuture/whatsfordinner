@@ -92,16 +92,11 @@
 				
 			<% } else { %>
 				Hello, <%= user._doc.name %>!
-
-				<p>
-					Recently you've been to <%- recent %>
-				</p>
-
 				<p>
 					Let's try again <%- suggestion %>
 				</p>
 				<p>
-					<br /><a href="/city">Browse by city</a>
+					<br /><a href="/city">Browse by city</a> | <a href="/recent">Recently visited</a>
 				</p>
 			<% } %>
 		</div>
