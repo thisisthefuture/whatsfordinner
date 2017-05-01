@@ -82,9 +82,9 @@ app.get('/auth/foursquare/callback',
   function(req, res) {
     console.log('authenticated');
 
-    // placesToEat = req.session.passport.user.checkins || [];
-    // locations = req.session.passport.user.locations || [];
-    
+    placesToEat = [];
+    locations = []; 
+
     req.session.save(err => {
       if (err) console.error(err)
       res.redirect(req.session.redirectTo || '/');
@@ -116,6 +116,7 @@ app.get('/', function (req, res) {
 
   if (req.user) {
     console.log('User exists:\t', req.user.name);
+
     getCheckins(req.user, function (recent, suggestion) {
       res.render('index', { recent: recent, suggestion: suggestion, user: req.user});
     });

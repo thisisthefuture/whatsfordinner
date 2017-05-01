@@ -15,7 +15,6 @@ exports.parse = function (json) {
     // get list of valid food/drinks related categories from Swarm
     var categories = require('./data/categories.js');
 
-    // var placesToEat = [];
     var citiesVisited = [];
 
     // if the passed city is NOT already in citiesVisited add it.
@@ -83,6 +82,7 @@ exports.parse = function (json) {
 
           // tracking & storing the last known time the place was visited
           // this is used later to ensure suggestions are sufficiently old.
+          // if other information needs to be updated, this would be the place to do it.
           if (ele.details.createdAt <= place.createdAt)
             ele.details.createdAt = place.createdAt;
         }
