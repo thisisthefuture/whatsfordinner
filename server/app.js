@@ -100,9 +100,8 @@ function ensureAuthenticated(req, res, next) {
   if (req.isAuthenticated()) { return next(); }
 
   // saving original URL so we can navigate back to it again after login
-  if (!req.session.redirectTo) {
-    req.session.redirectTo = req.originalUrl;
-  }
+  if (!req.session.redirectTo) req.session.redirectTo = req.originalUrl;
+  
   req.session.save(err => {
     if (err) return next(err)
     res.redirect('/login')
@@ -300,10 +299,10 @@ function getCitiesList() {
   let cities = '';
   if (placesVisited.length === 0) {
     cities = 'Whoops, no cities for some reason...';
+  } else {
+    cities = placesVisited.reduce((msg, item) => msg + '<a href="/city/' + item + '">' + item + '</a>  ', '')
   }
-
-  cities = placesVisited.reduce((msg, item) => msg + '<a href="/city/' + item + '">' + item + '</a>  ', '')
-
+  
   return cities;
 }
 
