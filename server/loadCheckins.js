@@ -23,9 +23,9 @@ exports.getPlaces = function (id, token, callback) {
         if (user.length > 1) {
             return console.error('why did we find multiple users with the same id');
         } else if (user.length === 0) {
-            // this should never happen if we're looking at the right id
-            // in foursquare.js we do User.findOneAndUpdate with upsert = true so
-            // an new user gets added to the db, if they don't already exist
+            // This should never happen if we're looking at the right id.
+            // In foursquare.js we do User.findOneAndUpdate with upsert = true so
+            // a new user gets added to the db, if they don't already exist
             return console.error('Unexpected:\tdidn\'t find a user with id = ', id);
         }
 

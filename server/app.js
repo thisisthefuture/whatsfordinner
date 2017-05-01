@@ -143,15 +143,14 @@ function getCheckinsHelper(req, cb) {
 
   // crude check to avoid making calls to foursquare or the db
   // TODO: make this check more practical to getting updates while a session is alive
-  if (placesToEat.length > 0) {
-    console.log('getcheckinshelper:\n\t\t We already have a list of places in memory');
-    var recent = printRecent(placesToEat);
-    var suggestion = bubblingTheOlder(placesToEat);
-    cb(recent, suggestion);
-  } else {
+  // if (placesToEat.length > 0) {
+  //   console.log('getcheckinshelper:\n\t\t We already have a list of places in memory');
+  //   var recent = printRecent(placesToEat);
+  //   var suggestion = bubblingTheOlder(placesToEat);
+  //   cb(recent, suggestion);
+  // } else {
     console.log('getcheckinshelper:\n\t\t We need to load checkins');
-    var loadCheckins = require('./loadCheckins');
-    loadCheckins.getPlaces(req.foursquare_id, req.oauth_token, function(places) {
+    require('./loadCheckins').getPlaces(req.foursquare_id, req.oauth_token, function(places) {
       placesToEat = places.venues;
       placesVisited = places.locations;
       var recent = printRecent(placesToEat);
@@ -159,7 +158,7 @@ function getCheckinsHelper(req, cb) {
       cb(recent, suggestion);
     });
   }    
-}
+
 
 // Takes an expected checkin object ele and returns a String summary containing
 // the name, linked if available, followed with one piece of detail.
@@ -285,7 +284,7 @@ app.get('/recent', ensureAuthenticated, function(req, res) {
 app.get('/all', ensureAuthenticated, function (req, res) {
   var summary = '';
 
-  getCheckins(req, function () {
+  getCheckins(req.user, function () {
     if (placesToEat.length === 0) {
       console.error('why are there no places to eat...');
     }
@@ -310,7 +309,7 @@ function getCitiesList() {
 // handling the URL routing without a city search term
 app.get('/city', ensureAuthenticated, function (req, res) {
 
-  getCheckins(req, function () {
+  getCheckins(req.user, function () {
     res.render('results', { title: 'city', results: getCitiesList()});
   });  
 });
@@ -320,7 +319,7 @@ app.get('/city/:city', ensureAuthenticated, function (req, res) {
 
   var summary = '';
 
-  getCheckins(req, function () {
+  getCheckins(req.user, function () {
     var city = req.params.city;
     // return the list of places in the provided City
     var results = findPlaceByCity(city);
