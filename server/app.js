@@ -1,20 +1,19 @@
 // setting up an express app framework
-var express = require('express');
+const express = require('express');
 
 // need express-session for foursquare passport authentication to work; don't know why yet
 const session = require('express-session');
 const mongoose = require('mongoose');
 const MongoDBStore = require('connect-mongodb-session')(session);
 
-var app = express();
+const app = express();
 
 // configuring the port for our web server
-var port = process.env.PORT || 5000;
-var server = require('http').Server(app);
-
+const port = process.env.PORT || 5000;
+const server = require('http').Server(app);
 
 // for time math and display
-var moment = require("moment");
+const moment = require("moment");
 
 // array to store our results of places
 var placesToEat = [];
@@ -37,6 +36,7 @@ mongoose.connect(process.env.MONGOOSE_URL);
 
 var passport = require('passport');
 var passportFoursquare = require('./auth/foursquare');
+let loadCheckins = require('./loadCheckins');
 var store = new MongoDBStore({
   uri: process.env.MONGOOSE_URL,
   collection: 'sessions'
@@ -51,7 +51,6 @@ server.listen(port, function () {
   console.log("App is running on port " + port);
 });
 
-// app.use(require('morgan')('dev')); 
 app.set('view engine', 'ejs');
 app.use(require('cookie-parser')(process.env.COOKIE_SECRET));
 app.use(session({
@@ -68,7 +67,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // GET /auth/foursquare
-//   Use passport.authenticate() as route middleware to authenticate the
+//   Use passportFoursquare.authenticate() as route middleware to authenticate the
 //   request.  The first step in Foursquare authentication will involve
 //   redirecting the user to foursquare.com.  After authorization, Foursquare
 //   will redirect the user back to this application at /auth/foursquare/callback
@@ -76,7 +75,7 @@ app.get('/auth/foursquare',
   passportFoursquare.authenticate('foursquare'));
 
 // GET /auth/foursquare/callback
-//   Use passport.authenticate() as route middleware to authenticate the
+//   Use passportFoursquare.authenticate() as route middleware to authenticate the
 //   request.  If authentication fails, the user will be redirected back to the
 //   login page.  Otherwise, the primary route function function will be called,
 //   which, in this example, will redirect the user to the home page.
@@ -86,9 +85,6 @@ app.get('/auth/foursquare/callback',
   }),
   function (req, res) {
     console.log('authenticated');
-
-    placesToEat = [];
-    locations = [];
 
     req.session.save(err => {
       if (err) console.error(err)
@@ -117,10 +113,6 @@ function ensureAuthenticated(req, res, next) {
 
 // The results to be shown when a user navigates to the root route
 app.get('/', function (req, res) {
-
-  console.log('req.session:\t', req.hasOwnProperty('session'));
-  console.log('req.user:\t', req.hasOwnProperty('user'));
-
   if (req.user) {
     console.log('User exists:\t', req.user.name);
 
@@ -156,17 +148,9 @@ function getCheckins(req, cb) {
 
 // Determins if we have a list of placesToEat to work with already or if we need to load them
 function getCheckinsHelper(req, cb) {
-
-  // crude check to avoid making calls to foursquare or the db
-  // TODO: make this check more practical to getting updates while a session is alive
-  // if (placesToEat.length > 0) {
-  //   console.log('getcheckinshelper:\n\t\t We already have a list of places in memory');
-  //   var recent = printRecent(placesToEat);
-  //   var suggestion = bubblingTheOlder(placesToEat);
-  //   cb(recent, suggestion);
-  // } else {
   console.log('getcheckinshelper:\n\t\t We need to load checkins');
-  require('./loadCheckins').getPlaces(req.foursquare_id, req.oauth_token, function (places) {
+
+  loadCheckins.getPlaces(req.foursquare_id, req.oauth_token, function (places) {
     placesToEat = places.venues;
     placesVisited = places.locations;
     var recent = printRecent(placesToEat);
@@ -248,9 +232,11 @@ function bubblingTheOlder(list) {
   }
 
   // give me places only in Seattle
-  var results = findPlaceByCity("Seattle");
-  var suggestion = '';
-  var index = 0;
+  let results = findPlaceByCity("Seattle"),
+    suggestion = '',
+    margin = 10,
+    index = 0;
+
 
   // TODO: Fix this to handle if all check-ins are within the last 10 days...
   // assumption: list goes from most recently visited to least recently visited
@@ -260,24 +246,23 @@ function bubblingTheOlder(list) {
   // have lots of visits from the community
 
   if (moment(results[results.length - 1].details.createdAt * 1000).isBefore(moment().subtract(10, 'days')) !== true) {
-    suggestion = printDetails(results[results.length - 1], true);
-    console.log('oldest place it is.')
-  } else {
-    // still can be looping here for awhile. OPPORTUNITY for optimization
-    while (suggestion === '') {
-      index = Math.floor(Math.random() * (results.length - 0));
+    margin = 0;
+    console.log('checkins too new. Setting margin = 0')
+  }
+  // still can be looping here for awhile. OPPORTUNITY for optimization
+  while (suggestion === '') {
+    index = Math.floor(Math.random() * (results.length - 0));
 
-      // to manually check how many tries we take to find a suggestion fitting the 10+ day threshold
-      // ideally should see this only once      
-      console.log('attempt');
+    // to manually check how many tries we take to find a suggestion fitting the 10+ day threshold
+    // ideally should see this only once      
+    console.log('attempt');
 
-      // TODO: add logic to handle ambigious places (e.g., which Serious Pie have I been to recently?)
-      // ... e.g., in print out of details, mention its street + city
+    // TODO: add logic to handle ambigious places (e.g., which Serious Pie have I been to recently?)
+    // ... e.g., in print out of details, mention its street + city
 
-      // if createdAt (last seen this check in) at least 10 days old
-      if (moment(results[index].details.createdAt * 1000).isBefore(moment().subtract(10, 'days')) === true) {
-        suggestion = printDetails(results[index], true);
-      }
+    // if createdAt (last seen this check in) at least 10 days old
+    if (moment(results[index].details.createdAt * 1000).isBefore(moment().subtract(margin, 'days')) === true) {
+      suggestion = printDetails(results[index], true);
     }
   }
 
@@ -287,11 +272,17 @@ function bubblingTheOlder(list) {
 // shows only the recently visited place
 app.get('/recent', ensureAuthenticated, function (req, res) {
   console.log('recently visited')
-  res.render('results', {
-    title: 'all',
-    results: printRecent(placesToEat)
+  getCheckins(req.user, function (recent) {
+    res.render('results', {
+      title: 'recent',
+      results: recent
+    });
   });
 });
+
+app.get('/recent/update', ensureAuthenticated, function (req, res) {
+
+})
 
 // a route to display all places
 app.get('/all', ensureAuthenticated, function (req, res) {
@@ -356,3 +347,8 @@ app.get('/city/:city', ensureAuthenticated, function (req, res) {
     });
   });
 });
+
+app.get('/logout', function (req, res) {
+  req.logout()
+  res.redirect('/')
+})
