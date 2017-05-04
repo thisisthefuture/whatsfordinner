@@ -1,5 +1,5 @@
 const passport = require('passport'),
-    User = require('./models/user'),
+    User = require('../models/user'),
     moment = require('moment'),
     options = {
         upsert: true
