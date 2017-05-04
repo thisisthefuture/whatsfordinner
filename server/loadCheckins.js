@@ -1,10 +1,11 @@
-var passport = require('passport'),
+const passport = require('passport'),
     User = require('./models/user'),
     moment = require('moment'),
-    searchQuery = {},
     options = {
         upsert: true
     };
+
+let searchQuery = {};
 
 // with token, get user's check_in account
 // only update database's checkin if
@@ -28,7 +29,7 @@ exports.getPlaces = function (id, token, callback) {
                     getCheckins(token, callback)
                 } else {
                     console.log('no update needed.')
-                    var checkins = {
+                    const checkins = {
                         venues: user[0]._doc.checkins,
                         locations: user[0]._doc.locations
                     }
@@ -37,7 +38,7 @@ exports.getPlaces = function (id, token, callback) {
             })
         } else {
             console.log('\t\t getting from database');
-            var checkins = {
+            const checkins = {
                 venues: user[0]._doc.checkins,
                 locations: user[0]._doc.locations
             }
@@ -84,7 +85,7 @@ getCheckinTotal = function (token, callback) {
     let profileURL = 'https://api.foursquare.com/v2/users/self?&v=20131016';
     passport._strategies.foursquare._oauth2.get(profileURL, token, function (err, body, res) {
         console.log('GET request for profile data')
-        var json;
+        let json;
 
         if (err) {
             if (err.data) {
@@ -107,9 +108,9 @@ getCheckinTotal = function (token, callback) {
 function getCheckins(token, callback) {
     let checkinURL = 'https://api.foursquare.com/v2/users/self/checkins?limit=250&v=20131016&offset=';
     let count = 0;
+
     // defining our RetrievePlaces method to kick-off our recurrsion RetrievePlacesHelper()
     function RetrievePlaces() {
-
         // passing our initial offset, and an empty array which will store the GET's json result
         RetrievePlacesHelper(0, []);
     }

@@ -1,40 +1,34 @@
 // setting up an express app framework
-const express = require('express');
+const express = require('express'),
+      app = express();
 
-// need express-session for foursquare passport authentication to work; don't know why yet
-const session = require('express-session');
-const mongoose = require('mongoose');
-const MongoDBStore = require('connect-mongodb-session')(session);
-
-const app = express();
+// need express-session for foursquare passport authentication to work
+const session = require('express-session'),
+      mongoose = require('mongoose'),
+      MongoDBStore = require('connect-mongodb-session')(session),
+      passport = require('passport'),
+      passportFoursquare = require('./auth/foursquare');
 
 // configuring the port for our web server
-const port = process.env.PORT || 5000;
-const server = require('http').Server(app);
-
-// for time math and display
-const moment = require("moment");
+const port = process.env.PORT || 5000,
+      server = require('http').Server(app);
 
 // to make use of a bunch of helper functions
-const util = require('./util')
-
-// array to store our results of places
-let placesToEat = [];
-
-// array to store all supported cities
-let placesVisited = [];
+const util = require('./util'),
+      loadCheckins = require('./loadCheckins');
 
 // connect to mongo database
 process.env.MONGOOSE_URL = process.env.MONGOOSE_URL || require('./_config').mongoose.url;
 mongoose.connect(process.env.MONGOOSE_URL);
-
-var passport = require('passport');
-var passportFoursquare = require('./auth/foursquare');
-let loadCheckins = require('./loadCheckins');
-var store = new MongoDBStore({
+ 
+const store = new MongoDBStore({
   uri: process.env.MONGOOSE_URL,
   collection: 'sessions'
 });
+
+// arrays to store our results of places & to store 
+let placesToEat = [],
+    placesVisited = [];
 
 store.on('error', function (error) {
   console.error(error);
@@ -147,69 +141,10 @@ function getCheckinsHelper(req, cb) {
   loadCheckins.getPlaces(req.foursquare_id, req.oauth_token, function (places) {
     placesToEat = places.venues;
     placesVisited = places.locations;
-    var recent = util.printRecent(placesToEat);
-    var suggestion = bubblingTheOlder(placesToEat);
+    let recent = util.printRecent(placesToEat);
+    let suggestion = util.getSuggestion(placesToEat);
     cb(recent, suggestion);
   });
-}
-
-// Takes a list and suggest a place to eat
-// 1. in the same city as they currently are in
-// 2. that hasn't been visited in 10 days.
-// TODO: make these two factors adjustable
-function bubblingTheOlder(list) {
-
-  if (list.length === 0) {
-    return "...sorry, I don't know where you've been."
-  }
-
-  // give me places only in Seattle
-  let results = util.findPlaceByCity(placesToEat, "Seattle"),
-    suggestion = '',
-    margin = 10,
-    index = 0;
-
-  // TODO: Fix this to handle if all check-ins are within the last 10 days...
-  // assumption: list goes from most recently visited to least recently visited
-  // slightly better: check the last element available.
-  // if the last (oldest known) place isn't more than 10 days old, then nothing is.
-  // Give that place back for now. Ideally: suggest them a place in the area they haven't been but
-  // have lots of visits from the community
-
-  if (moment(results[results.length - 1].details.createdAt * 1000).isBefore(moment().subtract(10, 'days')) !== true) {
-    margin = 0;
-    console.log('checkins too new. Setting margin = 0')
-  }
-  // still can be looping here for awhile. OPPORTUNITY for optimization
-  while (suggestion === '') {
-    index = Math.floor(Math.random() * (results.length - 0));
-
-    // to manually check how many tries we take to find a suggestion fitting the 10+ day threshold
-    // ideally should see this only once      
-    console.log('attempt');
-
-    // TODO: add logic to handle ambigious places (e.g., which Serious Pie have I been to recently?)
-    // ... e.g., in print out of details, mention its street + city
-
-    // if createdAt (last seen this check in) at least 10 days old
-    if (moment(results[index].details.createdAt * 1000).isBefore(moment().subtract(margin, 'days')) === true) {
-      suggestion = util.printDetails(results[index], true);
-    }
-  }
-
-  return suggestion;
-}
-
-
-function getCitiesList() {
-  let cities = '';
-  if (placesVisited.length === 0) {
-    cities = 'Whoops, no cities for some reason...';
-  } else {
-    cities = placesVisited.reduce((msg, item) => msg + '<a href="/city/' + item + '">' + item + '</a>  ', '')
-  }
-
-  return cities;
 }
 
 // shows only the recently visited place
@@ -248,19 +183,19 @@ app.get('/city', ensureAuthenticated, function (req, res) {
   console.log("list of cities visited")
   res.render('results', {
     title: 'city',
-    results: getCitiesList()
+    results: util.getCitiesList(placesVisited)
   });
 });
 
 // specifying a route to do city queries
 app.get('/city/:city', ensureAuthenticated, function (req, res) {
 
-  var summary = '';
+  let summary = '';
 
   getCheckins(req.user, function () {
-    var city = req.params.city;
+    let city = req.params.city;
     // return the list of places in the provided City
-    var results = util.findPlaceByCity(placesToEat, city);
+    let results = util.findPlaceByCity(placesToEat, city);
     console.log('looking at city = ', city);
 
     if (results.length === 0) {

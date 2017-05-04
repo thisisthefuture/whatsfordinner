@@ -1,4 +1,4 @@
-const moment = require("moment");
+const moment = require('moment');
 
 // Filter results by City
 function findPlaceByCity(placesToEat, query) {
@@ -66,9 +66,70 @@ function printRecent(list) {
   return printDetails(list[0]);
 }
 
+// Returns the list of cities
+function getCitiesList(placesVisited) {
+  let cities = '';
+  if (placesVisited.length === 0) {
+    cities = 'Whoops, no cities for some reason...';
+  } else {
+    cities = placesVisited.reduce((msg, item) => msg + '<a href="/city/' + item + '">' + item + '</a>  ', '')
+  }
+
+  return cities;
+}
+
+// Takes a list and suggest a place to eat
+// 1. in the same city as they currently are in
+// 2. that hasn't been visited in 10 days.
+// TODO: make these two factors adjustable
+function bubblingTheOlder(list) {
+
+  if (list.length === 0) {
+    return "...sorry, I don't know where you've been."
+  }
+
+  // give me places only in Seattle
+  let results = findPlaceByCity(list, "Seattle"),
+    suggestion = '',
+    margin = 10,
+    index = 0;
+
+  // TODO: Fix this to handle if all check-ins are within the last 10 days...
+  // assumption: list goes from most recently visited to least recently visited
+  // slightly better: check the last element available.
+  // if the last (oldest known) place isn't more than 10 days old, then nothing is.
+  // Give that place back for now. Ideally: suggest them a place in the area they haven't been but
+  // have lots of visits from the community
+
+  if (moment(results[results.length - 1].details.createdAt * 1000).isBefore(moment().subtract(10, 'days')) !== true) {
+    margin = 0;
+    console.log('checkins too new. Setting margin = 0')
+  }
+  // still can be looping here for awhile. OPPORTUNITY for optimization
+  while (suggestion === '') {
+    index = Math.floor(Math.random() * (results.length - 0));
+
+    // to manually check how many tries we take to find a suggestion fitting the 10+ day threshold
+    // ideally should see this only once      
+    console.log('attempt');
+
+    // TODO: add logic to handle ambigious places (e.g., which Serious Pie have I been to recently?)
+    // ... e.g., in print out of details, mention its street + city
+
+    // if createdAt (last seen this check in) at least 10 days old
+    if (moment(results[index].details.createdAt * 1000).isBefore(moment().subtract(margin, 'days')) === true) {
+      suggestion = printDetails(results[index], true);
+    }
+  }
+
+  return suggestion;
+}
+
 module.exports = {
     findPlaceByCity: findPlaceByCity,
     printDetails: printDetails,
     printArrayOfPlaces: printArrayOfPlaces,
-    printRecent: printRecent
+    printRecent: printRecent,
+    getCitiesList: getCitiesList,
+    getSuggestion: bubblingTheOlder
 }
