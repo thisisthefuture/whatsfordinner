@@ -6,7 +6,6 @@ var User = new Schema({
   name: String,
   foursquare_id: String,
   foursquare_emails: Array,
-  // id: String,
   oauth_token: String,
   swarm_checkins_total: Number,
   checkin_update_needed: Boolean,

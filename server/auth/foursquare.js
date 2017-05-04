@@ -20,8 +20,7 @@ passport.use(new FoursquareStrategy({
             name: profile.name.givenName,
             foursquare_emails: profile.emails,
             foursquare_id: profile.id,
-            oauth_token: accessToken,
-            swarm_slurp_date: 0
+            oauth_token: accessToken
         };
 
         // upsert = true to create the object if it doesn't exist. Defaults to false.

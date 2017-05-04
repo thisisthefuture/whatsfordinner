@@ -18,16 +18,16 @@ var passport = require('passport'),
 
 exports.getPlaces = function (id, token, callback) {
     findUser(id, function (user) {
+        console.log('Getting places')
         if (user[0]._doc.checkin_update_needed || moment(user[0]._doc.swarm_slurp_date) < moment().subtract(10, 'days')) {
-            console.log('either flag to update is true, or we haven\'t updated in 10 days')
             getCheckinTotal(token, function (total) {
-                if (total > user[0]._doc.swarm_checkins_total) {
+                if (total !== user[0]._doc.swarm_checkins_total) {
                     console.log('\t\t totals differ! Getting update from Swarm');
 
                     // gets the whole list of checkins.
                     getCheckins(token, callback)
                 } else {
-                    console.log('no update needed. Totals are equal')
+                    console.log('no update needed.')
                     var checkins = {
                         venues: user[0]._doc.checkins,
                         locations: user[0]._doc.locations
@@ -59,6 +59,7 @@ function findUser(id, callback) {
             // a new user gets added to the db, if they don't already exist
             return console.error('Unexpected:\tdidn\'t find a user with id = ', id);
         }
+        console.log('Found a user')
         callback(user)
     });
 }
@@ -139,6 +140,7 @@ function getCheckins(token, callback) {
     // Update database entry with checkins array
     function parseAndUpdate(places, totalSwarmCheckins) {
         let placesToEat = require('./checkins').parse(places);
+
         User.findOneAndUpdate(searchQuery, {
             swarm_checkins_total: totalSwarmCheckins,
             checkin_update_needed: false,
@@ -149,6 +151,7 @@ function getCheckins(token, callback) {
             if (err) {
                 console.error(err);
             } else {
+                console.log('updating the user in the db')
                 callback(placesToEat);
             }
         });

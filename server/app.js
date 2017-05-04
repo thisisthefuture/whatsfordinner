@@ -349,6 +349,7 @@ app.get('/city/:city', ensureAuthenticated, function (req, res) {
 });
 
 app.get('/logout', function (req, res) {
+  console.log('logout')
   req.logout()
   res.redirect('/')
 })
