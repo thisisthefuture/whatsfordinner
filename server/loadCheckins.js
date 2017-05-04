@@ -19,7 +19,7 @@ var passport = require('passport'),
 exports.getPlaces = function (id, token, callback) {
     findUser(id, function (user) {
         console.log('Getting places')
-        if (user[0]._doc.checkin_update_needed || moment(user[0]._doc.swarm_slurp_date) < moment().subtract(10, 'days')) {
+        if (user[0]._doc.checkin_update_needed || (moment(user[0]._doc.swarm_slurp_date) < moment().subtract(10, 'days'))) {
             getCheckinTotal(token, function (total) {
                 if (total !== user[0]._doc.swarm_checkins_total) {
                     console.log('\t\t totals differ! Getting update from Swarm');
@@ -45,6 +45,22 @@ exports.getPlaces = function (id, token, callback) {
         }
     });
 };
+
+exports.updateCheckins = function (id, token, callback) {
+    searchQuery.foursquare_id = id
+    findUser(id, function (user) {
+        User.findOneAndUpdate(searchQuery, {
+            checkin_update_needed: true
+        }, options, function (err, user) {
+            if (err) {
+                console.error(err);
+            } else {
+                // call some function that will compare and then call out to swarm if needed
+            }
+        });
+
+    })
+}
 
 function findUser(id, callback) {
     searchQuery.foursquare_id = id;
@@ -87,9 +103,6 @@ getCheckinTotal = function (token, callback) {
 
     })
 }
-
-
-
 
 function getCheckins(token, callback) {
     let checkinURL = 'https://api.foursquare.com/v2/users/self/checkins?limit=250&v=20131016&offset=';
