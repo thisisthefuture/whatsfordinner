@@ -4,7 +4,7 @@ const moment = require('moment');
 function findPlaceByCity(placesToEat, query) {
     return placesToEat.filter(function (el) {
         if (query === el.details.venue.location.city) {
-        return el;
+            return el;
         }
     });
 }
@@ -90,9 +90,9 @@ function bubblingTheOlder(list) {
 
   // give me places only in Seattle
   let results = findPlaceByCity(list, "Seattle"),
-    suggestion = '',
-    margin = 10,
-    index = 0;
+      suggestion = '',
+      margin = 10,
+      index = 0;
 
   // TODO: Fix this to handle if all check-ins are within the last 10 days...
   // assumption: list goes from most recently visited to least recently visited

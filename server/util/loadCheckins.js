@@ -81,7 +81,7 @@ function findUser(id, callback) {
     });
 }
 
-getCheckinTotal = function (token, callback) {
+function getCheckinTotal(token, callback) {
     let profileURL = 'https://api.foursquare.com/v2/users/self?&v=20131016';
     passport._strategies.foursquare._oauth2.get(profileURL, token, function (err, body, res) {
         console.log('GET request for profile data')
@@ -153,7 +153,7 @@ function getCheckins(token, callback) {
 
     // Update database entry with checkins array
     function parseAndUpdate(places, totalSwarmCheckins) {
-        let placesToEat = require('./checkins').parse(places);
+        let placesToEat = require('./util/checkins').parse(places);
 
         User.findOneAndUpdate(searchQuery, {
             swarm_checkins_total: totalSwarmCheckins,

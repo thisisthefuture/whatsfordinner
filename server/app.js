@@ -15,7 +15,7 @@ const port = process.env.PORT || 5000,
 
 // to make use of a bunch of helper functions
 const util = require('./util'),
-      checkins = require('./util/checkins.js');
+      results = require('./util/results.js');
 
 // connect to mongo database
 process.env.MONGOOSE_URL = process.env.MONGOOSE_URL || require('./_config').mongoose.url;
@@ -100,7 +100,7 @@ app.get('/', function (req, res) {
   if (req.user) {
     console.log('User exists:\t', req.user.name);
 
-    checkins.get(req.user, function (recent, suggestion) {
+    results.get(req.user, function (recent, suggestion) {
       res.render('index', {
         suggestion: suggestion,
         user: req.user
@@ -129,7 +129,7 @@ app.get('/login', function (req, res) {
 // shows only the recently visited place
 app.get('/recent', ensureAuthenticated, function (req, res) {
   console.log('recently visited')
-  checkins.get(req.user, function (recent) {
+  results.get(req.user, function (recent) {
     res.render('results', {
       title: 'recent',
       results: recent
@@ -142,12 +142,12 @@ app.get('/all', ensureAuthenticated, function (req, res) {
   let summary = '';
   console.log('showing all food related checkins')
 
-  checkins.get(req.user, function () {
-    if (checkins.placesToEat().length === 0) {
+  results.get(req.user, function () {
+    if (results.placesToEat().length === 0) {
       summary = 'why are there no places to eat...'
       console.error(summary);
     } else {
-      summary = util.printArrayOfPlaces(checkins.placesToEat());
+      summary = util.printArrayOfPlaces(results.placesToEat());
     }
 
     res.render('results', {
@@ -162,7 +162,7 @@ app.get('/city', ensureAuthenticated, function (req, res) {
   console.log("list of cities visited")
   res.render('results', {
     title: 'city',
-    results: util.getCitiesList(checkins.placesVisited())
+    results: util.getCitiesList(results.placesVisited())
   });
 });
 
@@ -171,10 +171,10 @@ app.get('/city/:city', ensureAuthenticated, function (req, res) {
 
   let summary = '';
 
-  checkins.get(req.user, function () {
+  results.get(req.user, function () {
     let city = req.params.city;
     // return the list of places in the provided City
-    let results = util.findPlaceByCity(checkins.placesToEat(), city);
+    let results = util.findPlaceByCity(results.placesToEat(), city);
     console.log('looking at city = ', city);
 
     if (results.length === 0) {

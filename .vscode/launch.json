@@ -15,7 +15,7 @@
                 "--timeout",
                 "999999",
                 "--colors",
-                "${workspaceRoot}/server/*.test.js",
+                "${workspaceRoot}/server/**/*.test.js",
                 "--reporter spec"
             ],
             "envFile": "${workspaceRoot}/.env",
