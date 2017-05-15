@@ -7,7 +7,7 @@
   "description": "The Sage & Alice What's for Dinner App. This app will remind us of what places we love to have dinner at.",
   "main": "app.js",
   "scripts": {
-    "test": "mocha ./server/app.test.js -w",
+    "test": "nyc mocha ./server/**/*.test.js -w",
     "start": "node ./server/app.js"
   },
   "repository": {
@@ -32,6 +32,7 @@
     "passport-foursquare": "^1.0.0"
   },
   "devDependencies": {
-    "mocha": "3.3.0"
+    "mocha": "3.3.0",
+    "nyc": "10.3.2"
   }
 }

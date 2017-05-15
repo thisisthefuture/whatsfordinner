@@ -8,15 +8,17 @@
             "type": "node",
             "request": "launch",
             "name": "Mocha Tests",
-            "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
+            "program": "${workspaceRoot}/node_modules/nyc/bin/nyc",
             "args": [
+                "--reporter=html",
+                "${workspaceRoot}/node_modules/mocha/bin/_mocha",
                 "-u",
                 "tdd",
                 "--timeout",
                 "999999",
                 "--colors",
                 "${workspaceRoot}/server/**/*.test.js",
-                "--reporter spec"
+                "--reporter=spec"
             ],
             "envFile": "${workspaceRoot}/.env",
             "internalConsoleOptions": "openOnSessionStart"

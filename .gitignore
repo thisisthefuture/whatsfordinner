@@ -7,11 +7,18 @@ node_modules/
 # Explicit files with *.gitignore
 *.gitignore
 
+# NPM logging
+npm-debug.log
+
 # Config file
 server/_config.js
 
 # Files used for VS Code
 .vscode/
+
+# Test results
+coverage/
+.nyc_output/
 
 # Windows image file caches
 Thumbs.db

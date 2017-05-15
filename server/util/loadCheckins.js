@@ -153,7 +153,7 @@ function getCheckins(token, callback) {
 
     // Update database entry with checkins array
     function parseAndUpdate(places, totalSwarmCheckins) {
-        let placesToEat = require('./util/checkins').parse(places);
+        let placesToEat = require('./checkins').parse(places);
 
         User.findOneAndUpdate(searchQuery, {
             swarm_checkins_total: totalSwarmCheckins,

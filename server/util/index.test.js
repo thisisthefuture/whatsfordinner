@@ -982,11 +982,11 @@ describe('Get cities list', () => {
 })
 
 describe('Getting a suggestion', () => {
-    // it('No places to pick from', () => {
-    //     let results = util.bubblingTheOlder([])
-    //     let expected = '...sorry, I don\'t know where you\'ve been'
-    //     assert.equal(results, expected)
-    // })
+    it('No places to pick from', () => {
+        let results = util.getSuggestion([])
+        let expected = '...sorry, I don\'t know where you\'ve been.'
+        assert.equal(results, expected)
+    })
 
     it('Places to pick from', () => {
 
