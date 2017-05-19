@@ -117,7 +117,9 @@ app.get('/', function (req, res) {
 });
 
 app.post('/update', function (req, res) {
-  console.log(req.body)
+  console.log('post body', req.body)
+
+  res.send('hi!')
 })
 
 app.get('/account', ensureAuthenticated, function (req, res) {
