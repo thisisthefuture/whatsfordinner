@@ -116,6 +116,10 @@ app.get('/', function (req, res) {
   }
 });
 
+app.get('/update', function (req, res) {
+  console.log(req)
+})
+
 app.get('/account', ensureAuthenticated, function (req, res) {
   res.render('account', {
     user: req.user
