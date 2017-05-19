@@ -118,6 +118,11 @@ app.get('/', function (req, res) {
 
 app.post('/update', function (req, res) {
   console.log('post', req)
+  console.log('post user', req.user)
+  console.log('post body', req.body)
+  console.log('post venue', req.venue)
+  console.log('post body user', req.body.user)
+  console.log('post body venue', req.body.venue)
 
   res.send('hi!')
 })
