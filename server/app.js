@@ -116,8 +116,8 @@ app.get('/', function (req, res) {
   }
 });
 
-app.get('/update', function (req, res) {
-  console.log(req)
+app.post('/update', function (req, res) {
+  console.log(req.body.venue.name)
 })
 
 app.get('/account', ensureAuthenticated, function (req, res) {
