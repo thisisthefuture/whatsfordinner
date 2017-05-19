@@ -117,7 +117,7 @@ app.get('/', function (req, res) {
 });
 
 app.post('/update', function (req, res) {
-  console.log('post body', req.body)
+  console.log('post', req)
 
   res.send('hi!')
 })
