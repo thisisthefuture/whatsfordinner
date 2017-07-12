@@ -2,7 +2,7 @@
   "name": "whatsfordinner",
   "version": "1.0.0",
   "engines": {
-    "node": "6.9.1"
+    "node": "6.11.1"
   },
   "description": "The Sage & Alice What's for Dinner App. This app will remind us of what places we love to have dinner at.",
   "main": "app.js",
