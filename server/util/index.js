@@ -14,12 +14,18 @@ function findPlaceByCity(placesToEat, query) {
 // if lastDate is true, the detail is the element's last known visit will be displayed
 // otherwise, the the detail is the visit count
 function printDetails (ele, lastDate) {
-    var summary = '';
+    let suggObj = {
+          name: ele.details.venue.name,
+          address: ele.details.venue.location,
+          lat: ele.details.venue.location.lat,
+          lng: ele.details.venue.location.lng,
+          display: ''
+    }
 
     if (ele.details.venue.hasOwnProperty('url')) {
-        summary += ('<a href="' + ele.details.venue.url + '">' + ele.details.venue.name + '</a>');
+        suggObj.display += ('<a href="' + ele.details.venue.url + '">' + ele.details.venue.name + '</a>');
     } else {
-        summary += (ele.details.venue.name);
+        suggObj.display += (ele.details.venue.name);
     }
 
     // can we get the neighborhood info from foursquare, e.g.,
@@ -36,25 +42,25 @@ function printDetails (ele, lastDate) {
     // most places from foursquare don't have this field yet. Need to look into twofishes
     // to populate this field. Sigh.
     if (ele.details.venue.location.hasOwnProperty('neighborhood'))
-        summary += ' in ' + ele.details.venue.location.neighborhood;
+        suggObj.display += ' in ' + ele.details.venue.location.neighborhood;
     // } else if (ele.details.venue.location.hasOwnProperty('address')) {
     //   summary += ' on ' + ele.details.venue.location.address;
     // }
 
     if (lastDate) {
-        summary += ('.<br />Last known visit on ' + moment(ele.details.createdAt * 1000).format('LL') + '<br />');
+        suggObj.display += ('.<br />Last known visit on ' + moment(ele.details.createdAt * 1000).format('LL') + '<br />');
     } else {
         if (ele.count === 1) {
-        summary += ('. Visited @ least once<br />');
+        suggObj.display += ('. Visited @ least once<br />');
         } else
-        summary += ('. Visited @ least ' + ele.count + ' times<br />');
+        suggObj.display += ('. Visited @ least ' + ele.count + ' times<br />');
     }
-    return summary;
+    return suggObj;
 }
 
 // Build the list to be displayed to the user, using printDetails helper function
 function printArrayOfPlaces(list) {
-  let summary = list.reduce((msg, item) => msg + printDetails(item), '');
+  let summary = list.reduce((msg, item) => msg + printDetails(item).display, '');
   return summary;
 }
 
@@ -63,7 +69,7 @@ function printRecent(list) {
   if (list.length === 0) {
     return "...sorry, I don't know where you've been."
   }
-  return printDetails(list[0]);
+  return printDetails(list[0]).display;
 }
 
 // Returns the list of cities

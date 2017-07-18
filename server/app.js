@@ -102,7 +102,62 @@ app.get('/', function (req, res) {
 
     displayedResults.get(req.user, function (recent, suggestion) {
       res.render('index', {
-        suggestion: suggestion,
+        suggestion: suggestion.display,
+        suggestionName: suggestion.name,
+        suggestionLocation: suggestion.address,
+        suggestionLat: suggestion.lat,
+        suggestionLng: suggestion.lng,
+        user: req.user
+      });
+    });
+  } else {
+    console.log('No user:\t :(');
+    res.render('index', {
+      recent: null,
+      suggestion: null,
+      user: req.user
+    });
+  }
+});
+
+// to test out Button integration
+app.get('/button', function (req, res) {
+  if (req.user) {
+    console.log('User exists:\t', req.user.name);
+
+    displayedResults.get(req.user, function (recent, suggestion) {
+      res.render('index', {
+        suggestion: 'I Sodi, visited at least once',
+        suggestionName: 'I Sodi',
+        SuggestionLocation: {
+                        "formattedAddress": [
+                            "105 Christopher St (at Bleecker St)",
+                            "New York, NY 10014"
+                        ],
+                        "country": "United States",
+                        "state": "NY",
+                        "city": "New York",
+                        "cc": "US",
+                        "postalCode": "10014",
+                        "labeledLatLngs": [
+                            {
+                                "lng": -74.00489939637646,
+                                "lat": 40.733367049674655,
+                                "label": "display"
+                            }
+                        ],
+                        "lng": -74.00489939637646,
+                        "lat": 40.733367049674655,
+                        "crossStreet": "at Bleecker St",
+                        "address": "105 Christopher"
+        },
+        suggestionLat: 40.733367049674655,
+        suggestionLng: -74.0048993963764,
+        // suggestion: suggestion.display,
+        // suggestionName: suggestion.name,
+        // suggestionLocation: suggestion.address,
+        // suggestionLat: suggestion.lat,
+        // suggestionLng: suggestion.lng,
         user: req.user
       });
     });

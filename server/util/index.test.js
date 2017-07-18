@@ -907,7 +907,7 @@ describe('Printing details', () => {
             "count": 1
         }
 
-        let results = util.printDetails(eleWithURL, false)
+        let results = util.printDetails(eleWithURL, false).display
         let expectedResult = '<a href=\"http://sugarhillseattle.com\">Sugar Hill</a>. Visited @ least once<br />'
         assert.equal(results, expectedResult)
     })
@@ -924,19 +924,19 @@ describe('Printing details', () => {
             "count": 2
         }
 
-        let results = util.printDetails(eleWithoutURL, false)
+        let results = util.printDetails(eleWithoutURL, false).display
         let expectedResult = 'Sugar Hill. Visited @ least 2 times<br />'
         assert.equal(results, expectedResult)
     })
 
     it('Prints details with neighbourhood', () => {
-        let results = util.printDetails(eleWithoutURL, false)
+        let results = util.printDetails(eleWithoutURL, false).display
         let expectedResult = 'Hot Mama\'s Pizza in Capitol Hill. Visited @ least 2 times<br />'
         assert.equal(results, expectedResult)
     })
 
     it('Prints details with last known visit', () => {
-        let results = util.printDetails(eleWithoutURL, true)
+        let results = util.printDetails(eleWithoutURL, true).display
         let expectedResult = 'Hot Mama\'s Pizza in Capitol Hill.<br />Last known visit on May 1, 2017<br />'
         assert.equal(results, expectedResult)
     })

@@ -1,6 +1,6 @@
 <html>
-	<header>
-		<style type="text/css">
+<header>
+	<style type="text/css">
 		h1 {
 			font-family: Georgia, serif;
 			font-style: italic;
@@ -18,7 +18,6 @@
 
 		a {
 			color: #999;
-
 		}
 
 		a:hover {
@@ -27,8 +26,7 @@
 			text-decoration: none;
 		}
 
-		#container
-		{
+		#container {
 			text-align: left;
 			width: 60%;
 			margin-top: 10%;
@@ -47,26 +45,25 @@
 		}
 
 		.fa {
-		    width: 48pt;
-		    height: 48pt;
-		    line-height: 40pt;
-		    font-size: 20pt;
-		    text-decoration: none;
-		    background-color: #2e2e2e;
-		    color: #f2ebe3;
-		    border: 4pt solid #2e2e2e;
-		    border-radius: 100%;
-		    display: inline-block;
-		    text-align: center;
-		    -webkit-box-sizing: border-box;
-		    -moz-box-sizing: border-box;
-		    box-sizing: border-box;
+			width: 48pt;
+			height: 48pt;
+			line-height: 40pt;
+			font-size: 20pt;
+			text-decoration: none;
+			background-color: #2e2e2e;
+			color: #f2ebe3;
+			border: 4pt solid #2e2e2e;
+			border-radius: 100%;
+			display: inline-block;
+			text-align: center;
+			-webkit-box-sizing: border-box;
+			-moz-box-sizing: border-box;
+			box-sizing: border-box;
 		}
 
 		.fa:hover {
-		    background-color: #fff659;
-		    border: 4pt solid #fff659;
-
+			background-color: #fff659;
+			border: 4pt solid #fff659;
 		}
 
 		@media only screen and (max-device-width: 480px) {
@@ -79,27 +76,50 @@
 				height: 88pt;
 				line-height: 80pt;
 				font-size: 60pt;
-			}		
+			}
 		}
+	</style>
+</header>
 
-		</style>
-	</header>
-	<body>
-		<div id="container">
-			<h1>What's for dinner?</h1>
-			<% if (!user) { %>
-				<h2>Welcome! Please <a href="/auth/foursquare">log in</a>.</h2>
-				
+<body>
+	<div id="container">
+		<h1>What's for dinner?</h1>
+		<% if (!user) { %>
+			<h2>Welcome! Please <a href="/auth/foursquare">log in</a>.</h2>
+
 			<% } else { %>
-				Hello, <%= user._doc.name %>!
-				<p>
-					Let's try again <%- suggestion %>
-				</p>
-				<p>
-					<br /><a href="/city">Browse by city</a> | <a href="/logout">Logout </a>
-				</p>
-			<% } %>
-		</div>
+				Hello,
+				<%= user._doc.name %>!
+					<p>
+						Let's try again
+						<%- suggestion %><br />
+							<div data-bttnio-id="btn-00d773ef1677b2e2" data-bttnio-context='{ subject_location: {name: <%- suggestionName %>, latitude: <%- suggestionLat %>, longitude: <%- suggestionLng %>
+							} }'></div>
+					</p>
+					<p>
+						<br /><a href="/city">Browse by city</a> | <a href="/logout">Logout </a>
+					</p>
+					<% } %>
+	</div>
 
-	</body>
+	<script>
+		window.ButtonWebConfig = {
+			applicationId: 'app-2d718a17a16553b3',
+			enableLogging: true
+		};
+		(function (u, s, e, b, t, n) {
+			u['__bttnio'] = b;
+			u[b] = u[b] || function () {
+				(u[b].q = u[b].q || []).push(arguments)
+			};
+			t = s.createElement(e);
+			n = s.getElementsByTagName(e)[0];
+			t.async = 1;
+			t.src = 'https://web.btncdn.com/v1/button.js';
+			n.parentNode.insertBefore(t, n)
+		})(window, document, 'script', 'bttnio');
+	</script>
+
+</body>
+
 </html>
