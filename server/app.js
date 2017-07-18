@@ -105,6 +105,7 @@ app.get('/', function (req, res) {
         suggestion: suggestion.display,
         suggestionName: suggestion.name,
         suggestionLocation: suggestion.address,
+        suggestionResyId: 0,
         suggestionLat: suggestion.lat,
         suggestionLng: suggestion.lng,
         user: req.user
@@ -151,6 +152,7 @@ app.get('/button', function (req, res) {
                         "crossStreet": "at Bleecker St",
                         "address": "105 Christopher"
         },
+        suggestionResyId: 433,
         suggestionLat: 40.733367049674655,
         suggestionLng: -74.0048993963764,
         // suggestion: suggestion.display,

@@ -93,8 +93,10 @@
 					<p>
 						Let's try again
 						<%- suggestion %><br />
-							<div data-bttnio-id="btn-00d773ef1677b2e2" data-bttnio-context='{ "subject_location": {"name": "<%- suggestionName %>", "latitude": <%- suggestionLat %>, "longitude": <%- suggestionLng %>
-							} }'></div>
+							<div data-bttnio-id="btn-00d773ef1677b2e2" data-bttnio-context='{ "subject_location": {"name": "<%- suggestionName %>", "latitude": <%- suggestionLat %>, "longitude": <%- suggestionLng %>,
+							"identifiers": { "resy": "<%- suggestionResyId %>"} } }'>
+							</div>
+
 					</p>
 					<p>
 						<br /><a href="/city">Browse by city</a> | <a href="/logout">Logout </a>
@@ -119,7 +121,6 @@
 			n.parentNode.insertBefore(t, n)
 		})(window, document, 'script', 'bttnio');
 	</script>
-
 </body>
 
 </html>
